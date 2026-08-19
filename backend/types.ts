@@ -197,3 +197,24 @@ export type Receipt = {
   amount: number;
   issuedAt: string;
 };
+export type AdmitApplicationInput = {
+  applicationId: string;
+  admissionNumber: string;
+  classStreamId: string;
+};
+
+export type ParentLearnerSummary = {
+  learner: LearnerProfile;
+  classStream?: ClassStream;
+  attendanceRate: number;
+  balance: number;
+};
+
+export type MarkAttendanceInput = {
+  classStreamId: string;
+  date: string;
+  records: Array<{
+    learnerId: string;
+    status: AttendanceRecord["status"];
+  }>;
+};
