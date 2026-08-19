@@ -1,16 +1,16 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Banknote,
   BookMarked,
   BookOpen,
   CalendarCheck,
-  ChevronRight,
   ClipboardCheck,
   FileText,
   GraduationCap,
   LayoutDashboard,
   Library,
   LockKeyhole,
+  Mail,
   ReceiptText,
   ShieldCheck,
   SlidersHorizontal,
@@ -21,313 +21,106 @@ import {
 import { Dashboard, getDashboard, login } from "./api";
 import "./styles.css";
 
-type AppProps = {
-  initialDashboard?: Dashboard;
-};
-
-type WorkspaceKey = "overview" | "attendance" | "resources" | "library" | "finance" | "admissions" | "audit" | "admin";
-
-type WorkspaceAction = {
-  label: string;
-  workspace: WorkspaceKey;
-};
-
+type AppProps = { initialDashboard?: Dashboard };
+type WorkspaceKey = "command" | "records" | "attendance" | "resources" | "library" | "billing" | "admissions" | "audit" | "settings" | "reconciliation" | "register";
 type NavItem = { key: WorkspaceKey; label: string; Icon: LucideIcon };
+type Action = { label: string; key: WorkspaceKey };
 
 const productName = "ShuleHub";
 
-const demoAccounts = [
-  ["Super Admin", "admin@demo.school", "AdminPass123!"],
-  ["Admissions", "admissions@demo.school", "AdmissionsPass123!"],
-  ["Finance", "finance@demo.school", "FinancePass123!"],
-  ["Teacher", "teacher@demo.school", "TeacherPass123!"],
-  ["Parent", "parent@demo.school", "ParentPass123!"],
-];
-
-const libraryLoans = [
-  { learnerId: "learner-001", title: "The River and the Source", code: "LIB-ENG-042", due: "26 Aug", status: "Due soon" },
-  { learnerId: "learner-001", title: "Primary Science Atlas", code: "LIB-SCI-118", due: "02 Sep", status: "On loan" },
-  { learnerId: "learner-002", title: "Kiswahili Fasaha", code: "LIB-KIS-031", due: "29 Aug", status: "On loan" },
+const loans = [
+  { learnerId: "learner-001", title: "The River and the Source", barcode: "LIB-ENG-042", due: "26 Aug", status: "Due soon" },
+  { learnerId: "learner-001", title: "Primary Science Atlas", barcode: "LIB-SCI-118", due: "02 Sep", status: "On loan" },
+  { learnerId: "learner-002", title: "Kiswahili Fasaha", barcode: "LIB-KIS-031", due: "29 Aug", status: "On loan" },
 ];
 
 const resources = [
-  { title: "Grade 4 Mathematics Practice Pack", audience: "Parents, learners, teachers", area: "Mathematics", status: "Published" },
-  { title: "CBC Environmental Activities Guide", audience: "Teachers", area: "Environmental Activities", status: "Staff only" },
-  { title: "Reading Fluency Home Sheet", audience: "Parents and learners", area: "Literacy", status: "Published" },
-  { title: "Assessment Evidence Upload Checklist", audience: "Teachers and academic leads", area: "Assessment", status: "Review" },
+  { title: "Grade 4 Mathematics Practice Pack", area: "Mathematics", audience: "Family, learner, teacher", owner: "HOD Mathematics" },
+  { title: "CBC Environmental Activities Guide", area: "Environmental Activities", audience: "Teachers", owner: "Academic Lead" },
+  { title: "Reading Fluency Home Sheet", area: "Literacy", audience: "Family and learner", owner: "Class Teacher" },
+  { title: "Assessment Evidence Upload Checklist", area: "Assessment", audience: "Teachers", owner: "Deputy Academics" },
 ];
 
-const formatKes = (amount: number) =>
-  new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(amount);
+const admissionsRows = ["Application Pipeline", "Application review", "Interview scheduling", "Offer letter", "Admission number", "Guardian onboarding"];
+const adminRows = ["Users & Roles", "Role and permission matrix", "Integration Vault", "Academic structure", "Audit export controls", "Backup readiness"];
+const financeRows = ["Invoice runs", "Payment allocation", "Receipt register", "Arrears aging", "Statement exports", "Bank deposit review"];
+const teacherRows = ["Class Register", "Assessment entry", "Homework issue", "Learner comments", "Resource publishing", "Welfare follow-up"];
+const studentRows = ["Assignments", "Learning Resources", "Library Books", "Published results", "Calendar", "Notices"];
 
-const roleLabel = (role: string) => role === "Finance Officer" ? "Bursar" : role;
+const formatKes = (amount: number) => new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(amount);
+const roleTitle = (role: string) => role === "Finance Officer" ? "Bursar Workbench" : role === "Super Admin" || role === "School Admin" ? "Admin Command Center" : role === "Teacher" ? "Teacher Workspace" : role === "Parent" ? "Family Portal" : role === "Admissions Officer" ? "Admissions Desk" : "Student Desk";
+const defaultWorkspace = (role: string): WorkspaceKey => role === "Finance Officer" ? "billing" : role === "Teacher" ? "register" : role === "Admissions Officer" ? "admissions" : role === "Parent" ? "records" : role === "Learner" ? "resources" : "settings";
 
-const actionsForRole = (role: string): WorkspaceAction[] => {
-  if (role === "Parent") {
-    return [
-      { label: "Open resources", workspace: "resources" },
-      { label: "View library books", workspace: "library" },
-      { label: "Review fee statement", workspace: "finance" },
-    ];
-  }
-  if (role === "Teacher") {
-    return [
-      { label: "Mark attendance", workspace: "attendance" },
-      { label: "Open resources", workspace: "resources" },
-      { label: "Review class list", workspace: "overview" },
-    ];
-  }
-  if (role === "Finance Officer") {
-    return [
-      { label: "Review arrears", workspace: "finance" },
-      { label: "Reconcile M-Pesa", workspace: "finance" },
-      { label: "Issue receipts", workspace: "finance" },
-    ];
-  }
-  if (role === "Admissions Officer") {
-    return [
-      { label: "Review applications", workspace: "admissions" },
-      { label: "Admit learners", workspace: "admissions" },
-      { label: "Confirm guardian links", workspace: "overview" },
-    ];
-  }
-  return [
-    { label: "Configure school", workspace: "admin" },
-    { label: "Review audit", workspace: "audit" },
-    { label: "Monitor integrations", workspace: "admin" },
+const navForRole = (role: string): NavItem[] => {
+  const common: NavItem[] = [
+    { key: "command", label: "Command", Icon: LayoutDashboard },
+    { key: "records", label: "Records", Icon: UsersRound },
+    { key: "resources", label: "Resources", Icon: BookMarked },
+    { key: "library", label: "Library", Icon: Library },
   ];
+  if (role === "Finance Officer") return [{ key: "billing", label: "Billing", Icon: Banknote }, { key: "reconciliation", label: "Reconciliation", Icon: ReceiptText }, ...common];
+  if (role === "Teacher") return [{ key: "register", label: "Class Register", Icon: ClipboardCheck }, { key: "attendance", label: "Attendance", Icon: CalendarCheck }, ...common];
+  if (role === "Admissions Officer") return [{ key: "admissions", label: "Admissions", Icon: FileText }, ...common];
+  if (role === "Parent") return [{ key: "records", label: "My Children", Icon: GraduationCap }, { key: "billing", label: "Fees", Icon: Banknote }, { key: "library", label: "Library", Icon: Library }, { key: "resources", label: "Resources", Icon: BookMarked }];
+  if (role === "Learner") return [{ key: "resources", label: "Study", Icon: BookMarked }, { key: "library", label: "Library", Icon: Library }, { key: "attendance", label: "Calendar", Icon: CalendarCheck }];
+  return [{ key: "settings", label: "Admin", Icon: UserCog }, { key: "audit", label: "Audit", Icon: ShieldCheck }, { key: "billing", label: "Finance", Icon: Banknote }, ...common];
 };
 
-function Metric({ label, value, icon: Icon, tone = "default" }: { label: string; value: string | number; icon: typeof UsersRound; tone?: string }) {
-  return (
-    <article className={`metric ${tone}`}>
-      <Icon aria-hidden="true" size={22} />
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
-  );
+const actionsForRole = (role: string): Action[] => {
+  if (role === "Finance Officer") return [{ label: "Invoice Runs", key: "billing" }, { label: "M-Pesa Exceptions", key: "reconciliation" }, { label: "Statement Exports", key: "billing" }];
+  if (role === "Teacher") return [{ label: "Open Register", key: "register" }, { label: "Assessment Entry", key: "attendance" }, { label: "Publish Resource", key: "resources" }];
+  if (role === "Admissions Officer") return [{ label: "Pipeline Review", key: "admissions" }, { label: "Offer Letters", key: "admissions" }, { label: "Guardian Records", key: "records" }];
+  if (role === "Parent") return [{ label: "Child Profile", key: "records" }, { label: "Fee Statement", key: "billing" }, { label: "Library Loans", key: "library" }];
+  if (role === "Learner") return [{ label: "Assignments", key: "resources" }, { label: "Borrowed Books", key: "library" }, { label: "Study Calendar", key: "attendance" }];
+  return [{ label: "Manage Users", key: "settings" }, { label: "Secure Integrations", key: "settings" }, { label: "Audit Review", key: "audit" }];
+};
+
+function Stat({ label, value, Icon }: { label: string; value: string | number; Icon: LucideIcon }) {
+  return <article className="stat"><Icon size={20} /><span>{label}</span><strong>{value}</strong></article>;
 }
 
-function WorkspacePanel({ dashboard, activeWorkspace }: { dashboard: Dashboard; activeWorkspace: WorkspaceKey }) {
-  const isAdmin = dashboard.role === "Super Admin" || dashboard.role === "School Admin";
-  const learnerIds = dashboard.parentLearners.map((item) => item.learner.id);
-  const visibleLoans = learnerIds.length === 0 ? libraryLoans.slice(0, 2) : libraryLoans.filter((loan) => learnerIds.includes(loan.learnerId));
+function DataTable({ title, rows, icon: Icon }: { title: string; rows: string[]; icon: LucideIcon }) {
+  return <section className="module"><header><Icon size={20} /><h3>{title}</h3></header>{rows.map((row, index) => <button className="table-row" type="button" key={row} aria-label={`Open workflow row ${index + 1}`}><span>{row}</span><strong>{index % 2 === 0 ? "Ready" : "Review"}</strong></button>)}</section>;
+}
 
-  if (activeWorkspace === "resources") {
-    return (
-      <section className="work-panel" aria-labelledby="resources-title">
-        <div className="section-heading"><BookMarked size={22} /><h2 id="resources-title">Learning Resources</h2></div>
-        <div className="resource-grid">
-          {resources.map((resource) => (
-            <article className="resource-card" key={resource.title}>
-              <span>{resource.area}</span>
-              <h3>{resource.title}</h3>
-              <p>{resource.audience}</p>
-              <strong>{resource.status}</strong>
-            </article>
-          ))}
-        </div>
-      </section>
-    );
-  }
+function Workspace({ dashboard, active }: { dashboard: Dashboard; active: WorkspaceKey }) {
+  const linkedIds = dashboard.parentLearners.map((item) => item.learner.id);
+  const visibleLoans = linkedIds.length ? loans.filter((loan) => linkedIds.includes(loan.learnerId)) : loans;
 
-  if (activeWorkspace === "library") {
-    return (
-      <section className="work-panel" aria-labelledby="library-title">
-        <div className="section-heading"><Library size={22} /><h2 id="library-title">Library Books</h2></div>
-        {visibleLoans.map((loan) => (
-          <div className="detail-row" key={loan.code}>
-            <div><strong>{loan.title}</strong><span>{loan.code}</span></div>
-            <div><strong>{loan.status}</strong><span>Due {loan.due}</span></div>
-          </div>
-        ))}
-      </section>
-    );
-  }
-
-  if (activeWorkspace === "finance") {
-    return (
-      <section className="work-panel" aria-labelledby="finance-title">
-        <div className="section-heading"><ReceiptText size={22} /><h2 id="finance-title">Finance Workspace</h2></div>
-        <div className="finance-strip">
-          <span>Open balance</span><strong>{formatKes(dashboard.totals.openBalance)}</strong>
-          <span>M-Pesa reconciliation</span><strong>{dashboard.totals.invoices} tracked invoices</strong>
-        </div>
-      </section>
-    );
-  }
-
-  if (activeWorkspace === "attendance") {
-    return (
-      <section className="work-panel" aria-labelledby="attendance-title">
-        <div className="section-heading"><ClipboardCheck size={22} /><h2 id="attendance-title">Attendance</h2></div>
-        <div className="resource-grid compact">
-          {dashboard.classes.map((schoolClass) => (
-            <article className="resource-card" key={schoolClass.id}>
-              <span>{schoolClass.gradeName}</span>
-              <h3>{schoolClass.streamName}</h3>
-              <p>{schoolClass.learners} learners ready for register marking.</p>
-              <strong>Class register</strong>
-            </article>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (activeWorkspace === "admissions") {
-    return (
-      <section className="work-panel" aria-labelledby="admissions-title">
-        <div className="section-heading"><FileText size={22} /><h2 id="admissions-title">Admissions Desk</h2></div>
-        <div className="detail-row"><div><strong>Application review</strong><span>Document checks, interviews, offers</span></div><button type="button">Open queue</button></div>
-        <div className="detail-row"><div><strong>Guardian records</strong><span>Contacts, pickup permissions, links</span></div><button type="button">Verify</button></div>
-      </section>
-    );
-  }
-
-  if (activeWorkspace === "audit") {
-    return (
-      <section className="work-panel" aria-labelledby="audit-title">
-        <div className="section-heading"><ShieldCheck size={22} /><h2 id="audit-title">Audit Trail</h2></div>
-        {dashboard.recentAudit.length === 0 ? <p className="readable-note">No recent audit events for this session.</p> : dashboard.recentAudit.map((event) => (
-          <div className="audit-row" key={event.id}><strong>{event.action}</strong><span>{event.summary}</span></div>
-        ))}
-      </section>
-    );
-  }
-
-  if (activeWorkspace === "admin" && isAdmin) {
-    return (
-      <section className="work-panel" aria-labelledby="admin-title">
-        <div className="section-heading"><UserCog size={22} /><h2 id="admin-title">System Controls</h2></div>
-        <div className="admin-grid">
-          <button type="button"><SlidersHorizontal size={18} /> Role and permission matrix</button>
-          <button type="button"><ShieldCheck size={18} /> Audit export controls</button>
-          <button type="button"><Banknote size={18} /> Integration credentials</button>
-          <button type="button"><GraduationCap size={18} /> Academic structure</button>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="work-panel" aria-labelledby="overview-title">
-      <div className="section-heading"><LayoutDashboard size={22} /><h2 id="overview-title">Role Overview</h2></div>
-      <div className="overview-grid">
-        <article><strong>{roleLabel(dashboard.role)} workspace</strong><span>Personalized controls for the signed-in user.</span></article>
-        <article><strong>{dashboard.totals.learners} learners</strong><span>Active records with linked guardians and class placement.</span></article>
-        <article><strong>{dashboard.classes.length} class streams</strong><span>Teacher assignment and attendance-ready registers.</span></article>
-      </div>
-    </section>
-  );
+  if (active === "settings") return <DataTable title="System Controls" rows={adminRows} icon={UserCog} />;
+  if (active === "audit") return <section className="module"><header><ShieldCheck size={20} /><h3>Audit Trail</h3></header>{dashboard.recentAudit.map((event) => <div className="audit-line" key={event.id}><strong>{event.action}</strong><span>{event.summary}</span></div>)}</section>;
+  if (active === "billing") return <DataTable title={dashboard.role === "Finance Officer" ? "Billing Control" : "Fee Statement"} rows={financeRows} icon={Banknote} />;
+  if (active === "reconciliation") return <DataTable title="Reconciliation Queue" rows={["M-Pesa Exceptions", "Duplicate callbacks", "Unmatched receipts", "Reversal approvals"]} icon={ReceiptText} />;
+  if (active === "register") return <DataTable title="Class Register" rows={teacherRows} icon={ClipboardCheck} />;
+  if (active === "attendance") return <DataTable title="Attendance And Calendar" rows={["Daily register", "Late arrivals", "Absence follow-up", "Assessment calendar"]} icon={CalendarCheck} />;
+  if (active === "admissions") return <DataTable title="Applications" rows={admissionsRows} icon={FileText} />;
+  if (active === "resources") return <section className="module wide"><header><BookMarked size={20} /><h3>{dashboard.role === "Learner" ? "Study Board" : "Learning Resources"}</h3></header><div className="resource-board">{resources.map((resource) => <article key={resource.title}><span>{resource.area}</span><strong>{resource.title}</strong><p>{resource.audience}</p><small>{resource.owner}</small></article>)}{dashboard.role === "Learner" && <article><span>Class tasks</span><strong>Assignment Board</strong><p>Open class tasks and teacher feedback.</p><small>Due this week</small></article>}</div></section>;
+  if (active === "library") return <section className="module"><header><Library size={20} /><h3>Library Books</h3></header>{visibleLoans.map((loan) => <div className="library-line" key={loan.barcode}><div><strong>{loan.title}</strong><span>{loan.barcode}</span></div><div><strong>{loan.status}</strong><span>Due {loan.due}</span></div></div>)}</section>;
+  if (active === "records") return <section className="module"><header><GraduationCap size={20} /><h3>{dashboard.role === "Parent" ? "Child Records" : "Learner Records"}</h3></header>{dashboard.parentLearners.map((item) => <div className="library-line" key={item.learner.id}><div><strong>{item.learner.firstName} {item.learner.lastName}</strong><span>{item.learner.admissionNumber}</span></div><div><strong>{item.attendanceRate}% attendance</strong><span>{formatKes(item.balance)}</span></div></div>)}{dashboard.role === "Parent" && <><div className="library-line"><div><strong>The River and the Source</strong><span>Current library loan</span></div><div><strong>Due soon</strong><span>Due 26 Aug</span></div></div><div className="library-line"><div><strong>Grade 4 Mathematics Practice Pack</strong><span>Learning resource</span></div><div><strong>Shared</strong><span>Family and teacher access</span></div></div></>}</section>;
+  return <section className="module wide"><header><LayoutDashboard size={20} /><h3>{roleTitle(dashboard.role)}</h3></header><div className="resource-board"><article><span>Academics</span><strong>Learning progress</strong><p>Classes, resources, assessment tasks, comments, and report readiness.</p></article><article><span>Operations</span><strong>Daily work</strong><p>Attendance, admissions, communication, fees, library, and follow-up queues.</p></article><article><span>Controls</span><strong>Permission aware</strong><p>Only authorized users see sensitive finance, admin, and audit tools.</p></article></div></section>;
 }
 
 function DashboardView({ dashboard }: { dashboard: Dashboard }) {
-  const isAdmin = dashboard.role === "Super Admin" || dashboard.role === "School Admin";
-  const defaultWorkspace: WorkspaceKey = isAdmin ? "admin" : "overview";
-  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceKey>(defaultWorkspace);
+  const [active, setActive] = useState<WorkspaceKey>(defaultWorkspace(dashboard.role));
+  const nav = useMemo(() => navForRole(dashboard.role), [dashboard.role]);
   const actions = useMemo(() => actionsForRole(dashboard.role), [dashboard.role]);
-  const navItems: NavItem[] = [
-    { key: "overview", label: "Overview", Icon: LayoutDashboard },
-    { key: "resources", label: "Resources", Icon: BookMarked },
-    { key: "library", label: "Library", Icon: Library },
-    { key: "finance", label: dashboard.role === "Finance Officer" ? "Bursar" : "Finance", Icon: Banknote },
-    { key: "attendance", label: "Attendance", Icon: ClipboardCheck },
-    ...(isAdmin ? [
-      { key: "admin" as const, label: "Admin", Icon: UserCog },
-      { key: "audit" as const, label: "Audit", Icon: ShieldCheck },
-    ] : []),
-  ];
 
-  return (
-    <main className="shell">
-      <aside className="sidebar" aria-label="Primary navigation">
-        <div className="logo-lockup"><span>SH</span><strong>{productName}</strong></div>
-        <nav>
-          {navItems.map(({ key, label, Icon }) => (
-            <button className={activeWorkspace === key ? "active" : ""} key={key} type="button" onClick={() => setActiveWorkspace(key)}>
-              <Icon size={18} /> {label}
-            </button>
-          ))}
-        </nav>
-      </aside>
+  useEffect(() => {
+    setActive(defaultWorkspace(dashboard.role));
+  }, [dashboard.role]);
 
-      <section className="main-area">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">{roleLabel(dashboard.role)}</p>
-            <h1>{productName}</h1>
-          </div>
-          <div className="secure-badge"><ShieldCheck size={18} /> Protected workspace</div>
-        </header>
-
-        <section className="metrics" aria-label="Operational metrics">
-          <Metric label="Learners" value={dashboard.totals.learners} icon={GraduationCap} tone="green" />
-          <Metric label="Guardians" value={dashboard.totals.guardians} icon={UsersRound} tone="blue" />
-          <Metric label="Open balance" value={formatKes(dashboard.totals.openBalance)} icon={Banknote} tone="gold" />
-          <Metric label="Library loans" value={libraryLoans.length} icon={Library} tone="rose" />
-        </section>
-
-        <section className="workspace-layout">
-          <div className="action-panel">
-            <div className="section-heading"><CalendarCheck size={22} /><h2>Priority Actions</h2></div>
-            <div className="task-list">
-              {actions.map((action) => (
-                <button key={action.label} type="button" onClick={() => setActiveWorkspace(action.workspace)}>
-                  <span>{action.label}</span><ChevronRight size={18} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <WorkspacePanel dashboard={dashboard} activeWorkspace={activeWorkspace} />
-
-          <section className="work-panel quick-panel" aria-labelledby="quick-resources-title">
-            <div className="section-heading"><BookMarked size={22} /><h2 id="quick-resources-title">Resource Shelf</h2></div>
-            <p className="panel-kicker">Learning Resources</p>
-            {resources.slice(0, 3).map((resource) => (
-              <div className="detail-row" key={resource.title}>
-                <div><strong>{resource.title}</strong><span>{resource.area}</span></div>
-                <div><strong>{resource.status}</strong><span>{resource.audience}</span></div>
-              </div>
-            ))}
-          </section>
-
-          <section className="work-panel quick-panel" aria-labelledby="quick-library-title">
-            <div className="section-heading"><Library size={22} /><h2 id="quick-library-title">Library Books</h2></div>
-            {libraryLoans.slice(0, 3).map((loan) => (
-              <div className="detail-row" key={loan.code}>
-                <div><strong>{loan.title}</strong><span>{loan.code}</span></div>
-                <div><strong>{loan.status}</strong><span>Due {loan.due}</span></div>
-              </div>
-            ))}
-          </section>
-          <section className="work-panel people-panel" aria-label="Learners and classes">
-            <div className="section-heading"><BookOpen size={22} /><h2>People And Classes</h2></div>
-            {dashboard.parentLearners.map((item) => (
-              <div className="detail-row" key={item.learner.id}>
-                <div><strong>{item.learner.firstName} {item.learner.lastName}</strong><span>{item.learner.admissionNumber}</span></div>
-                <div><strong>{item.attendanceRate}%</strong><span>{formatKes(item.balance)}</span></div>
-              </div>
-            ))}
-            {dashboard.classes.map((schoolClass) => (
-              <div className="detail-row" key={schoolClass.id}>
-                <div><strong>{schoolClass.gradeName} {schoolClass.streamName}</strong><span>Assigned stream</span></div>
-                <div><strong>{schoolClass.learners}</strong><span>learners</span></div>
-              </div>
-            ))}
-          </section>
-        </section>
-      </section>
-    </main>
-  );
+  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => setActive(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="trust"><ShieldCheck size={18} />Role-secured session</div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => setActive(action.key)}>{action.label}</button>)}</section><section className="work-grid"><Workspace dashboard={dashboard} active={active} /><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} />}</section></section></main>;
 }
 
 export default function App({ initialDashboard }: AppProps) {
-  const [email, setEmail] = useState("admin@demo.school");
-  const [password, setPassword] = useState("AdminPass123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [dashboard, setDashboard] = useState<Dashboard | null>(initialDashboard ?? null);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setDashboard(initialDashboard ?? null);
+  }, [initialDashboard]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -341,34 +134,10 @@ export default function App({ initialDashboard }: AppProps) {
   };
 
   if (dashboard) return <DashboardView dashboard={dashboard} />;
-
-  return (
-    <main className="login-page">
-      <section className="login-panel" aria-labelledby="login-title">
-        <div className="brand-mark"><GraduationCap size={34} /></div>
-        <p className="eyebrow">School operations platform</p>
-        <h1 id="login-title">{productName}</h1>
-        <form onSubmit={submit} className="login-form">
-          <label>
-            Email
-            <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" />
-          </label>
-          <label>
-            Password
-            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" />
-          </label>
-          {error && <p className="form-error">{error}</p>}
-          <button type="submit"><LockKeyhole size={18} /> Sign in</button>
-        </form>
-        <div className="demo-list" aria-label="Demo accounts">
-          {demoAccounts.map(([role, demoEmail, demoPassword]) => (
-            <button key={role} type="button" onClick={() => { setEmail(demoEmail); setPassword(demoPassword); }}>
-              <span>{role}</span>
-              <strong>{demoEmail}</strong>
-            </button>
-          ))}
-        </div>
-      </section>
-    </main>
-  );
+  return <main className="login-screen"><section className="login-card" aria-labelledby="login-title"><div className="brand-mark"><GraduationCap size={34} /></div><p>Secure access</p><h1 id="login-title">{productName}</h1><form onSubmit={submit}><label>Email<input aria-label="Email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" /></label><label>Password<input aria-label="Password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" /></label>{error && <p className="form-error">{error}</p>}<button type="submit"><LockKeyhole size={18} />Sign in</button></form></section></main>;
 }
+
+
+
+
+
