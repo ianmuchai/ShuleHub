@@ -53,7 +53,71 @@ h3 { margin: 0; font-size: 1.08rem; line-height: 1.25; }
 }
 
 .brand-mark { width: 58px; height: 58px; margin-bottom: 20px; }
-.login-card form { display: grid; gap: 16px; margin-top: 28px; }
+.login-card form { display: grid; gap: 16px; margin-top: 18px; }
+.remembered-logins, .role-picker {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.remembered-logins {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.remembered-logins button, .role-picker button, .role-switcher button, .current-role {
+  min-height: 42px;
+  border-radius: 6px;
+  border: 1px solid #d7dfd6;
+  background: #fff;
+  color: #153325;
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.remembered-logins button {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 2px;
+  padding: 10px 12px;
+  text-align: left;
+  background: #f8faf6;
+}
+
+.remembered-logins span { color: #15291f; font-size: 1rem; }
+.remembered-logins strong { color: #426454; font-size: 0.95rem; }
+.role-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.role-picker button { padding: 9px 11px; }
+.role-picker button.selected, .role-picker button:hover { border-color: #c69b35; background: #fff3d4; color: #10261d; }
+
+.session-tools {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.role-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 520px;
+}
+
+.role-switcher button, .current-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 11px;
+  min-height: 38px;
+  font-size: 0.96rem;
+}
+
+.current-role {
+  border-color: #123d2d;
+  background: #123d2d;
+  color: #fff;
+}
 label { display: grid; gap: 8px; color: #23382d; font-size: 1rem; font-weight: 850; }
 input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius: 6px; padding: 12px 14px; color: #101915; background: #fbfcfa; font-size: 1rem; }
 .login-card button {
@@ -180,10 +244,13 @@ input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius:
   .portal-main { padding: 16px; }
   .portal-header { display: grid; }
   .trust { white-space: normal; border-radius: 8px; }
+  .session-tools { justify-items: start; }
+  .role-switcher { justify-content: flex-start; }
   .portal-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; }
-  .stats, .resource-board { grid-template-columns: 1fr; }
+  .stats, .resource-board, .remembered-logins, .role-picker { grid-template-columns: 1fr; }
   .action-strip { display: grid; }
   .table-row, .library-line { display: grid; justify-content: stretch; }
   .library-line > div:last-child { text-align: left; }
   h1 { font-size: 2.15rem; }
 }
+

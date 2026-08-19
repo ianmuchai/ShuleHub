@@ -65,6 +65,11 @@ const seed = (): Store => {
       name: "Parent",
       permissions: ["learner:linked:read", "finance:view"],
     },
+    {
+      id: "role-learner",
+      name: "Learner",
+      permissions: ["learner:linked:read"],
+    },
   ];
 
   const users: User[] = [
@@ -98,8 +103,9 @@ const seed = (): Store => {
       passwordHash: hash("TeacherPass123!"),
       name: "David Class Teacher",
       status: "active",
-      roleIds: ["role-teacher"],
+      roleIds: ["role-teacher", "role-parent", "role-finance"],
       staffProfileId: "staff-teacher",
+      guardianProfileId: "guardian-002",
     },
     {
       id: "user-parent",
@@ -127,7 +133,10 @@ const seed = (): Store => {
         teacherUserId: "user-teacher",
       },
     ],
-    guardianProfiles: [{ id: "guardian-001", userId: "user-parent", phoneNumber: "+254712345678" }],
+    guardianProfiles: [
+      { id: "guardian-001", userId: "user-parent", phoneNumber: "+254712345678" },
+      { id: "guardian-002", userId: "user-teacher", phoneNumber: "+254722345678" },
+    ],
     learners: [
       {
         id: "learner-001",
@@ -138,7 +147,10 @@ const seed = (): Store => {
         status: "active",
       },
     ],
-    guardianLearners: [{ guardianProfileId: "guardian-001", learnerId: "learner-001", relationship: "Mother" }],
+    guardianLearners: [
+      { guardianProfileId: "guardian-001", learnerId: "learner-001", relationship: "Mother" },
+      { guardianProfileId: "guardian-002", learnerId: "learner-001", relationship: "Guardian" },
+    ],
     placementHistory: [{ id: "placement-001", learnerId: "learner-001", classStreamId: "stream-grade-4-east", startedAt: "2026-01-05" }],
     applications: [
       {
@@ -162,3 +174,4 @@ export let store = seed();
 export const resetStore = () => {
   store = seed();
 };
+

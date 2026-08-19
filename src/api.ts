@@ -1,5 +1,6 @@
 export type LoginResponse = {
   sessionId: string;
+  activeRole: string;
   user: {
     id: string;
     name: string;
@@ -10,7 +11,7 @@ export type LoginResponse = {
 
 export type Dashboard = {
   role: string;
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; email: string; roles?: string[] };
   totals: {
     learners: number;
     guardians: number;
@@ -44,10 +45,17 @@ const api = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
   return body;
 };
 
-export const login = (email: string, password: string) =>
+export const login = (email: string, password: string, selectedRole: string) =>
   api<LoginResponse>("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, selectedRole }),
+  });
+
+export const switchRole = (sessionId: string, selectedRole: string) =>
+  api<LoginResponse>("/api/auth/switch-role", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${sessionId}` },
+    body: JSON.stringify({ selectedRole }),
   });
 
 export const getDashboard = (sessionId: string) =>

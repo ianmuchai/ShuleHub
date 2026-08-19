@@ -1,10 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import App from "./App";
 
 const baseDashboard = {
-  user: { id: "user", name: "User", email: "user@school.test" },
+  user: { id: "user", name: "User", email: "user@school.test", roles: ["Super Admin"] },
   totals: { learners: 410, guardians: 720, invoices: 188, openBalance: 1265000, auditEvents: 49 },
   integrations: {},
   parentLearners: [{
@@ -17,16 +17,68 @@ const baseDashboard = {
   recentAudit: [{ id: "audit-1", action: "finance.invoice.create", summary: "Created invoice INV-000001", createdAt: "2026-08-19" }],
 };
 
-const dashboard = (role: string) => ({ ...baseDashboard, role });
+const dashboard = (role: string, roles = [role]) => ({ ...baseDashboard, role, user: { ...baseDashboard.user, roles } });
 
 describe("App", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   test("login is production-facing and does not expose demo account choices", () => {
     render(<App />);
     expect(screen.getByRole("heading", { name: "ShuleHub" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Teacher" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Parent" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Student" })).toBeTruthy();
     expect(screen.queryByText(/admin@demo.school/i)).toBeNull();
     expect(screen.queryByText(/demo account/i)).toBeNull();
     expect(screen.queryByText(/Kenyan School Management System/i)).toBeNull();
     expect(screen.queryByText(/PWA prototype/i)).toBeNull();
+  });
+
+  test("selected login role is sent to the secure API and remembered for the returning person", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ sessionId: "session-1", user: { id: "u1", name: "Grace", email: "grace@school.test", roles: ["Teacher", "Parent"] } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => dashboard("Teacher", ["Teacher", "Parent"]) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Teacher" }));
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "grace@school.test" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "StrongPass123!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await screen.findByRole("heading", { name: "Teacher Workspace" });
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({ selectedRole: "Teacher" });
+    expect(localStorage.getItem("shulehub.loginHistory")).toContain("grace@school.test");
+    expect(localStorage.getItem("shulehub.loginHistory")).toContain("Teacher");
+  });
+
+  test("remembered users can reuse or change their role before logging in", () => {
+    localStorage.setItem("shulehub.loginHistory", JSON.stringify([{ email: "grace@school.test", name: "Grace", lastRole: "Parent", roles: ["Teacher", "Parent"], lastLoginAt: "2026-08-19T10:00:00.000Z" }]));
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Grace Parent/i }));
+    expect(screen.getByLabelText("Email")).toHaveValue("grace@school.test");
+    expect(screen.getByRole("button", { name: "Parent" })).toHaveClass("selected");
+
+    fireEvent.click(screen.getByRole("button", { name: "Teacher" }));
+    expect(screen.getByRole("button", { name: "Teacher" })).toHaveClass("selected");
+  });
+
+  test("multi-role users can switch the active workspace after login", () => {
+    render(<App initialDashboard={dashboard("Teacher", ["Teacher", "Parent", "Finance Officer"])} />);
+    expect(screen.getByRole("heading", { name: "Teacher Workspace" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to Parent" }));
+    expect(screen.getByRole("heading", { name: "Family Portal" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to Bursar" }));
+    expect(screen.getByRole("heading", { name: "Bursar Workbench" })).toBeTruthy();
   });
 
   test("admin portal exposes system controls that are hidden from parents", () => {
@@ -67,3 +119,5 @@ describe("App", () => {
     expect(screen.getByText("Application Pipeline"));
   });
 });
+
+

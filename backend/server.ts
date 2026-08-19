@@ -5,7 +5,7 @@ import { loadConfig } from "./config";
 import { AppError, isAppError } from "./errors";
 import { createInvoice, getStatement, handleMpesaCallback, initiateMpesaPayment } from "./financeService";
 import { providerStatus, sendNotification } from "./integrations/notifications";
-import { createSession, requireSession } from "./security";
+import { createSession, requireSession, switchSessionRole } from "./security";
 import { getClassStream, getLearnersInClass } from "./schoolService";
 import { store } from "./store";
 import { markAttendance } from "./attendanceService";
@@ -26,7 +26,7 @@ const asyncRoute = (handler: (request: Request, response: Response) => Promise<v
 
 const dashboardFor = (sessionId: string) => {
   const context = requireSession(sessionId);
-  const role = context.roles[0]?.name ?? "Parent";
+  const role = context.activeRole.name;
   const totals = {
     learners: store.learners.length,
     guardians: store.guardianProfiles.length,
@@ -37,7 +37,7 @@ const dashboardFor = (sessionId: string) => {
 
   return {
     role,
-    user: { id: context.user.id, name: context.user.name, email: context.user.email },
+    user: { id: context.user.id, name: context.user.name, email: context.user.email, roles: context.roles.map((assignedRole) => assignedRole.name) },
     totals,
     integrations: {
       mpesa: loadConfig({ SESSION_SECRET: process.env.SESSION_SECRET ?? "dev-session-secret", ...process.env }).mpesa.configured,
@@ -57,18 +57,23 @@ export const createApp = () => {
   app.use(express.json());
 
   app.get("/api/health", (_request, response) => {
-    response.json({ ok: true, service: "Kenyan School Management System" });
+    response.json({ ok: true, service: "ShuleHub" });
   });
 
   app.post("/api/auth/login", asyncRoute(async (request, response) => {
-    const session = await createSession(String(request.body.email ?? ""), String(request.body.password ?? ""));
+    const session = await createSession(String(request.body.email ?? ""), String(request.body.password ?? ""), request.body.selectedRole ? String(request.body.selectedRole) : undefined);
     response.json(session);
+  }));
+
+  app.post("/api/auth/switch-role", asyncRoute((request, response) => {
+    const sessionId = sessionIdFromRequest(request);
+    response.json(switchSessionRole(sessionId, String(request.body.selectedRole ?? "")));
   }));
 
   app.get("/api/me", asyncRoute((request, response) => {
     const sessionId = sessionIdFromRequest(request);
     const context = requireSession(sessionId);
-    response.json({ user: context.user, roles: context.roles.map((role) => role.name) });
+    response.json({ user: context.user, activeRole: context.activeRole.name, roles: context.roles.map((role) => role.name) });
   }));
 
   app.get("/api/dashboard", asyncRoute((request, response) => {
@@ -126,3 +131,5 @@ if (process.env.NODE_ENV !== "test") {
     console.log(`School system API running on http://127.0.0.1:${port}`);
   });
 }
+
+

@@ -2,7 +2,6 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Banknote,
   BookMarked,
-  BookOpen,
   CalendarCheck,
   ClipboardCheck,
   FileText,
@@ -18,15 +17,26 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
-import { Dashboard, getDashboard, login } from "./api";
+import { Dashboard, getDashboard, login, switchRole } from "./api";
 import "./styles.css";
 
 type AppProps = { initialDashboard?: Dashboard };
 type WorkspaceKey = "command" | "records" | "attendance" | "resources" | "library" | "billing" | "admissions" | "audit" | "settings" | "reconciliation" | "register";
 type NavItem = { key: WorkspaceKey; label: string; Icon: LucideIcon };
 type Action = { label: string; key: WorkspaceKey };
+type LoginHistoryItem = { email: string; name: string; lastRole: string; roles: string[]; lastLoginAt: string };
 
 const productName = "ShuleHub";
+const loginHistoryKey = "shulehub.loginHistory";
+const roleOptions = [
+  { label: "Admin", value: "Super Admin" },
+  { label: "Admissions", value: "Admissions Officer" },
+  { label: "Bursar", value: "Finance Officer" },
+  { label: "Teacher", value: "Teacher" },
+  { label: "Parent", value: "Parent" },
+  { label: "Student", value: "Learner" },
+];
+const roleDisplay = (role: string) => role === "Finance Officer" ? "Bursar" : role === "Learner" ? "Student" : role === "Admissions Officer" ? "Admissions" : role === "Super Admin" ? "Admin" : role;
 
 const loans = [
   { learnerId: "learner-001", title: "The River and the Source", barcode: "LIB-ENG-042", due: "26 Aug", status: "Due soon" },
@@ -45,11 +55,24 @@ const admissionsRows = ["Application Pipeline", "Application review", "Interview
 const adminRows = ["Users & Roles", "Role and permission matrix", "Integration Vault", "Academic structure", "Audit export controls", "Backup readiness"];
 const financeRows = ["Invoice runs", "Payment allocation", "Receipt register", "Arrears aging", "Statement exports", "Bank deposit review"];
 const teacherRows = ["Class Register", "Assessment entry", "Homework issue", "Learner comments", "Resource publishing", "Welfare follow-up"];
-const studentRows = ["Assignments", "Learning Resources", "Library Books", "Published results", "Calendar", "Notices"];
 
 const formatKes = (amount: number) => new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(amount);
 const roleTitle = (role: string) => role === "Finance Officer" ? "Bursar Workbench" : role === "Super Admin" || role === "School Admin" ? "Admin Command Center" : role === "Teacher" ? "Teacher Workspace" : role === "Parent" ? "Family Portal" : role === "Admissions Officer" ? "Admissions Desk" : "Student Desk";
 const defaultWorkspace = (role: string): WorkspaceKey => role === "Finance Officer" ? "billing" : role === "Teacher" ? "register" : role === "Admissions Officer" ? "admissions" : role === "Parent" ? "records" : role === "Learner" ? "resources" : "settings";
+
+const readLoginHistory = (): LoginHistoryItem[] => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(loginHistoryKey) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((item) => item?.email && item?.lastRole) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLoginHistory = (item: LoginHistoryItem) => {
+  const withoutCurrent = readLoginHistory().filter((candidate) => candidate.email !== item.email);
+  localStorage.setItem(loginHistoryKey, JSON.stringify([item, ...withoutCurrent].slice(0, 8)));
+};
 
 const navForRole = (role: string): NavItem[] => {
   const common: NavItem[] = [
@@ -100,44 +123,97 @@ function Workspace({ dashboard, active }: { dashboard: Dashboard; active: Worksp
   return <section className="module wide"><header><LayoutDashboard size={20} /><h3>{roleTitle(dashboard.role)}</h3></header><div className="resource-board"><article><span>Academics</span><strong>Learning progress</strong><p>Classes, resources, assessment tasks, comments, and report readiness.</p></article><article><span>Operations</span><strong>Daily work</strong><p>Attendance, admissions, communication, fees, library, and follow-up queues.</p></article><article><span>Controls</span><strong>Permission aware</strong><p>Only authorized users see sensitive finance, admin, and audit tools.</p></article></div></section>;
 }
 
-function DashboardView({ dashboard }: { dashboard: Dashboard }) {
+function DashboardView({ dashboard, onRoleChange }: { dashboard: Dashboard; onRoleChange: (role: string) => void }) {
   const [active, setActive] = useState<WorkspaceKey>(defaultWorkspace(dashboard.role));
   const nav = useMemo(() => navForRole(dashboard.role), [dashboard.role]);
   const actions = useMemo(() => actionsForRole(dashboard.role), [dashboard.role]);
+  const assignableRoles = dashboard.user.roles?.length ? dashboard.user.roles : [dashboard.role];
 
   useEffect(() => {
     setActive(defaultWorkspace(dashboard.role));
   }, [dashboard.role]);
 
-  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => setActive(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="trust"><ShieldCheck size={18} />Role-secured session</div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => setActive(action.key)}>{action.label}</button>)}</section><section className="work-grid"><Workspace dashboard={dashboard} active={active} /><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} />}</section></section></main>;
+  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => setActive(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="session-tools"><div className="trust"><ShieldCheck size={18} />Role-secured session</div>{assignableRoles.length > 1 && <div className="role-switcher" aria-label="Switch active role">{assignableRoles.map((role) => role === dashboard.role ? <span className="current-role" key={role}>{roleDisplay(role)}</span> : <button type="button" key={role} onClick={() => onRoleChange(role)}>Switch to {roleDisplay(role)}</button>)}</div>}</div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => setActive(action.key)}>{action.label}</button>)}</section><section className="work-grid"><Workspace dashboard={dashboard} active={active} /><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} />}</section></section></main>;
 }
 
 export default function App({ initialDashboard }: AppProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [sessionId, setSessionId] = useState("");
   const [dashboard, setDashboard] = useState<Dashboard | null>(initialDashboard ?? null);
+  const [history, setHistory] = useState<LoginHistoryItem[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setDashboard(initialDashboard ?? null);
   }, [initialDashboard]);
 
+  useEffect(() => {
+    setHistory(readLoginHistory());
+  }, []);
+
+  const remember = (nextDashboard: Dashboard, activeRole: string) => {
+    const item = {
+      email: nextDashboard.user.email,
+      name: nextDashboard.user.name,
+      lastRole: activeRole,
+      roles: nextDashboard.user.roles?.length ? nextDashboard.user.roles : [activeRole],
+      lastLoginAt: new Date().toISOString(),
+    };
+    writeLoginHistory(item);
+    setHistory(readLoginHistory());
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
+    if (!selectedRole) {
+      setError("Choose the role you want to use for this sign in.");
+      return;
+    }
+
     try {
-      const session = await login(email, password);
-      setDashboard(await getDashboard(session.sessionId));
+      const session = await login(email, password, selectedRole);
+      setSessionId(session.sessionId);
+      const nextDashboard = await getDashboard(session.sessionId);
+      const withRoles = { ...nextDashboard, user: { ...nextDashboard.user, id: session.user.id, name: session.user.name, email: session.user.email, roles: session.user.roles } };
+      setDashboard(withRoles);
+      remember(withRoles, session.activeRole || selectedRole);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Sign in failed");
     }
   };
 
-  if (dashboard) return <DashboardView dashboard={dashboard} />;
-  return <main className="login-screen"><section className="login-card" aria-labelledby="login-title"><div className="brand-mark"><GraduationCap size={34} /></div><p>Secure access</p><h1 id="login-title">{productName}</h1><form onSubmit={submit}><label>Email<input aria-label="Email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" /></label><label>Password<input aria-label="Password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" /></label>{error && <p className="form-error">{error}</p>}<button type="submit"><LockKeyhole size={18} />Sign in</button></form></section></main>;
+  const useRememberedLogin = (item: LoginHistoryItem) => {
+    setEmail(item.email);
+    setSelectedRole(item.lastRole);
+  };
+
+  const handleRoleChange = async (role: string) => {
+    if (!dashboard) return;
+    setError("");
+    if (!sessionId) {
+      const nextDashboard = { ...dashboard, role, user: { ...dashboard.user, roles: dashboard.user.roles ?? [dashboard.role] } };
+      setDashboard(nextDashboard);
+      remember(nextDashboard, role);
+      return;
+    }
+
+    try {
+      const session = await switchRole(sessionId, role);
+      const nextDashboard = await getDashboard(session.sessionId);
+      const withRoles = { ...nextDashboard, user: { ...nextDashboard.user, id: session.user.id, name: session.user.name, email: session.user.email, roles: session.user.roles } };
+      setDashboard(withRoles);
+      remember(withRoles, session.activeRole || role);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Role switch failed");
+    }
+  };
+
+  if (dashboard) return <DashboardView dashboard={dashboard} onRoleChange={handleRoleChange} />;
+
+  return <main className="login-screen"><section className="login-card" aria-labelledby="login-title"><div className="brand-mark"><GraduationCap size={34} /></div><p>Secure access</p><h1 id="login-title">{productName}</h1>{history.length > 0 && <section className="remembered-logins" aria-label="Remembered people">{history.map((item) => <button type="button" key={item.email} onClick={() => useRememberedLogin(item)}><span>{item.name}</span><strong>{roleDisplay(item.lastRole)}</strong></button>)}</section>}<section className="role-picker" aria-label="Choose login role">{roleOptions.map((role) => <button className={selectedRole === role.value ? "selected" : ""} type="button" key={role.value} onClick={() => setSelectedRole(role.value)}>{role.label}</button>)}</section><form onSubmit={submit}><label>Email<input aria-label="Email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" /></label><label>Password<input aria-label="Password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" /></label>{error && <p className="form-error">{error}</p>}<button type="submit"><LockKeyhole size={18} />Sign in</button></form></section></main>;
 }
-
-
-
 
 
