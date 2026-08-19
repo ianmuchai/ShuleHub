@@ -116,6 +116,15 @@ const seed = (): Store => {
       roleIds: ["role-parent"],
       guardianProfileId: "guardian-001",
     },
+    {
+      id: "user-student",
+      email: "student@demo.school",
+      passwordHash: hash("StudentPass123!"),
+      name: "Nia Wanjiku",
+      status: "active",
+      roleIds: ["role-learner"],
+      learnerProfileId: "learner-001",
+    },
   ];
 
   return {
@@ -174,4 +183,5 @@ export let store = seed();
 export const resetStore = () => {
   store = seed();
 };
+
 

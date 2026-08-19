@@ -29,12 +29,12 @@ type LoginHistoryItem = { email: string; name: string; lastRole: string; roles: 
 const productName = "ShuleHub";
 const loginHistoryKey = "shulehub.loginHistory";
 const roleOptions = [
-  { label: "Admin", value: "Super Admin" },
-  { label: "Admissions", value: "Admissions Officer" },
-  { label: "Bursar", value: "Finance Officer" },
-  { label: "Teacher", value: "Teacher" },
-  { label: "Parent", value: "Parent" },
-  { label: "Student", value: "Learner" },
+  { label: "Admin", value: "Super Admin", email: "admin@demo.school", password: "AdminPass123!" },
+  { label: "Admissions", value: "Admissions Officer", email: "admissions@demo.school", password: "AdmissionsPass123!" },
+  { label: "Bursar", value: "Finance Officer", email: "finance@demo.school", password: "FinancePass123!" },
+  { label: "Teacher", value: "Teacher", email: "teacher@demo.school", password: "TeacherPass123!" },
+  { label: "Parent", value: "Parent", email: "parent@demo.school", password: "ParentPass123!" },
+  { label: "Student", value: "Learner", email: "student@demo.school", password: "StudentPass123!" },
 ];
 const roleDisplay = (role: string) => role === "Finance Officer" ? "Bursar" : role === "Learner" ? "Student" : role === "Admissions Officer" ? "Admissions" : role === "Super Admin" ? "Admin" : role;
 
@@ -190,6 +190,12 @@ export default function App({ initialDashboard }: AppProps) {
     setSelectedRole(item.lastRole);
   };
 
+  const useTestingRole = (role: typeof roleOptions[number]) => {
+    setSelectedRole(role.value);
+    setEmail(role.email);
+    setPassword(role.password);
+  };
+
   const handleRoleChange = async (role: string) => {
     if (!dashboard) return;
     setError("");
@@ -213,7 +219,8 @@ export default function App({ initialDashboard }: AppProps) {
 
   if (dashboard) return <DashboardView dashboard={dashboard} onRoleChange={handleRoleChange} />;
 
-  return <main className="login-screen"><section className="login-card" aria-labelledby="login-title"><div className="brand-mark"><GraduationCap size={34} /></div><p>Secure access</p><h1 id="login-title">{productName}</h1>{history.length > 0 && <section className="remembered-logins" aria-label="Remembered people">{history.map((item) => <button type="button" key={item.email} onClick={() => useRememberedLogin(item)}><span>{item.name}</span><strong>{roleDisplay(item.lastRole)}</strong></button>)}</section>}<section className="role-picker" aria-label="Choose login role">{roleOptions.map((role) => <button className={selectedRole === role.value ? "selected" : ""} type="button" key={role.value} onClick={() => setSelectedRole(role.value)}>{role.label}</button>)}</section><form onSubmit={submit}><label>Email<input aria-label="Email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" /></label><label>Password<input aria-label="Password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" /></label>{error && <p className="form-error">{error}</p>}<button type="submit"><LockKeyhole size={18} />Sign in</button></form></section></main>;
+  return <main className="login-screen"><section className="login-card" aria-labelledby="login-title"><div className="brand-mark"><GraduationCap size={34} /></div><p>Secure access</p><h1 id="login-title">{productName}</h1>{history.length > 0 && <section className="remembered-logins" aria-label="Remembered people">{history.map((item) => <button type="button" key={item.email} onClick={() => useRememberedLogin(item)}><span>{item.name}</span><strong>{roleDisplay(item.lastRole)}</strong></button>)}</section>}<section className="role-picker" aria-label="Choose login role">{roleOptions.map((role) => <button className={selectedRole === role.value ? "selected" : ""} type="button" key={role.value} onClick={() => useTestingRole(role)}>{role.label}</button>)}</section><form onSubmit={submit}><label>Email<input aria-label="Email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" /></label><label>Password<input aria-label="Password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" /></label>{error && <p className="form-error">{error}</p>}<button type="submit"><LockKeyhole size={18} />Sign in</button></form></section></main>;
 }
+
 
 

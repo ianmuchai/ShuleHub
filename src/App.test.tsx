@@ -34,6 +34,14 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Teacher" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Parent" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Student" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Teacher" }));
+    expect(screen.getByLabelText("Email")).toHaveValue("teacher@demo.school");
+    expect(screen.getByLabelText("Password")).toHaveValue("TeacherPass123!");
+
+    fireEvent.click(screen.getByRole("button", { name: "Student" }));
+    expect(screen.getByLabelText("Email")).toHaveValue("student@demo.school");
+    expect(screen.getByLabelText("Password")).toHaveValue("StudentPass123!");
     expect(screen.queryByText(/admin@demo.school/i)).toBeNull();
     expect(screen.queryByText(/demo account/i)).toBeNull();
     expect(screen.queryByText(/Kenyan School Management System/i)).toBeNull();
@@ -119,5 +127,6 @@ describe("App", () => {
     expect(screen.getByText("Application Pipeline"));
   });
 });
+
 
 
