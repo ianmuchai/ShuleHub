@@ -1,16 +1,21 @@
-# Kenyan School Management System
+# ShuleHub
 
-Secure, mobile-first school management foundation for Kenyan schools. This Release 1 build includes authentication, roles, audit logging, admissions, learner and guardian linkage, attendance, finance, M-Pesa callback handling, notification provider boundaries, and role dashboards.
+Secure, mobile-first school management foundation for schools. This build includes authentication, active role selection, role-scoped dashboards, audit logging, admissions, learner and guardian linkage, attendance, finance, M-Pesa callback handling, notification provider boundaries, library/resource views, and Vercel-ready frontend/API routing.
 
-## Demo Accounts
+## Temporary Testing Access
 
-| Role | Email | Password |
+During system testing, choose a role on the sign-in screen and the app will prefill the matching test credentials. The backend still validates the selected role server-side and rejects any role that is not assigned to the user.
+
+| Role Option | Email | Password |
 | --- | --- | --- |
-| Super Admin | `admin@demo.school` | `AdminPass123!` |
+| Admin | `admin@demo.school` | `AdminPass123!` |
 | Admissions | `admissions@demo.school` | `AdmissionsPass123!` |
-| Finance | `finance@demo.school` | `FinancePass123!` |
+| Bursar | `finance@demo.school` | `FinancePass123!` |
 | Teacher | `teacher@demo.school` | `TeacherPass123!` |
 | Parent | `parent@demo.school` | `ParentPass123!` |
+| Student | `student@demo.school` | `StudentPass123!` |
+
+Before launch, remove the temporary credential-prefill mapping in `src/App.tsx` and replace seeded users with production identity records.
 
 ## Local Commands
 
@@ -24,9 +29,27 @@ npm run dev
 
 The backend runs on `http://127.0.0.1:4000`. For frontend development, run `npm run dev:frontend` in another terminal and open `http://127.0.0.1:5173`.
 
+## Vercel Deployment Prep
+
+This repository includes:
+
+- `vercel.json` for Vite static output and `/api/*` rewrites.
+- `api/index.ts` to expose the existing Express app as a Vercel function.
+- `npm run build` as the production build command.
+- `dist` as the Vercel output directory.
+
+Suggested Vercel project settings:
+
+- Framework Preset: `Vite`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+- Install Command: `npm install`
+
+Set production environment variables in Vercel before using real integrations.
+
 ## Production Integration Variables
 
-Copy `.env.example` to `.env` and provide real values before production use:
+Copy `.env.example` to `.env` locally and add matching values in Vercel Project Settings:
 
 - `DATABASE_URL`
 - `SESSION_SECRET`
@@ -45,18 +68,19 @@ Copy `.env.example` to `.env` and provide real values before production use:
 - `FILE_STORAGE_PROVIDER`
 - `FILE_STORAGE_BUCKET`
 
-## Security Controls In Release 1
+## Security Controls In This Build
 
 - Server-side session checks for protected APIs.
-- Server-side role and permission checks.
+- Server-side active-role and permission checks.
+- Rejection of tampered role selections.
 - Guardian-to-learner isolation through guardian links.
 - Password hashing with bcrypt.
 - Session revocation.
-- Audit records for authentication, admissions, attendance, invoices, and payment callbacks.
+- Audit records for authentication, role switching, admissions, attendance, invoices, and payment callbacks.
 - Idempotent M-Pesa callback processing.
 - Reconciliation exceptions for unmatched M-Pesa callbacks.
 - Backend-only integration credentials.
 
 ## Current Storage
 
-Release 1 uses an in-memory repository with a typed store boundary so workflows can be tested immediately. Production persistence is the next infrastructure step: replace the store implementation with PostgreSQL migrations and transactional repositories while preserving service interfaces.
+This build uses an in-memory repository with a typed store boundary so workflows can be tested immediately. Production persistence is the next infrastructure step: replace the store implementation with PostgreSQL migrations and transactional repositories while preserving service interfaces.

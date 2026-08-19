@@ -124,12 +124,13 @@ export const createApp = () => {
   return app;
 };
 
-if (process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   process.env.SESSION_SECRET = process.env.SESSION_SECRET || "dev-session-secret-change-before-production";
   const port = Number(process.env.PORT ?? 4000);
   createApp().listen(port, () => {
     console.log(`School system API running on http://127.0.0.1:${port}`);
   });
 }
+
 
 
