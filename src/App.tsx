@@ -208,6 +208,7 @@ export default function App({ initialDashboard }: AppProps) {
 
     try {
       const session = await switchRole(sessionId, role);
+      setSessionId(session.sessionId);
       const nextDashboard = await getDashboard(session.sessionId);
       const withRoles = { ...nextDashboard, user: { ...nextDashboard.user, id: session.user.id, name: session.user.name, email: session.user.email, roles: session.user.roles } };
       setDashboard(withRoles);

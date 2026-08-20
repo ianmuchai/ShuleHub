@@ -21,9 +21,9 @@ describe("security", () => {
     expect(teacher.activeRole).toBe("Teacher");
     expect(() => requirePermission(teacher.sessionId, "finance:manage")).toThrow("Forbidden");
 
-    switchSessionRole(teacher.sessionId, "Parent");
-    expect(() => requirePermission(teacher.sessionId, "learner:linked:read")).not.toThrow();
-    expect(() => requirePermission(teacher.sessionId, "attendance:mark")).toThrow("Forbidden");
+    const parentSession = switchSessionRole(teacher.sessionId, "Parent");
+    expect(() => requirePermission(parentSession.sessionId, "learner:linked:read")).not.toThrow();
+    expect(() => requirePermission(parentSession.sessionId, "attendance:mark")).toThrow("Forbidden");
   });
 
   test("rejects tampered role selection during login", async () => {

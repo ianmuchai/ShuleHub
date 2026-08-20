@@ -58,6 +58,21 @@ describe("server", () => {
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.role).toBe("Parent");
   });
+  test("session token survives a serverless cold start between login and dashboard", async () => {
+    const app = createApp();
+    const login = await request(app).post("/api/auth/login").send({
+      email: "parent@demo.school",
+      password: "ParentPass123!",
+      selectedRole: "Parent",
+    });
+
+    expect(login.status).toBe(200);
+    resetStore();
+    const freshApp = createApp();
+    const dashboard = await request(freshApp).get("/api/dashboard").set("Authorization", `Bearer ${login.body.sessionId}`);
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.body.role).toBe("Parent");
+  });
   test("guardian cannot fetch another learner statement", async () => {
     const app = createApp();
     const login = await request(app).post("/api/auth/login").send({

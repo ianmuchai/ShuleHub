@@ -1,11 +1,74 @@
 import bcrypt from "bcryptjs";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { appendAudit } from "./audit";
 import { store } from "./store";
-import { PermissionKey, Role, RoleName, SessionView, UserContext } from "./types";
+import { PermissionKey, Role, RoleName, Session, SessionView, UserContext } from "./types";
 import { AppError } from "./errors";
 
 const SESSION_HOURS = 8;
+const TOKEN_VERSION = 1;
+const DEV_SESSION_SECRET = "dev-session-secret-change-before-production";
+
+type SessionTokenPayload = {
+  v: typeof TOKEN_VERSION;
+  sid: string;
+  userId: string;
+  activeRoleName: RoleName;
+  expiresAt: string;
+};
+
+const sessionSecret = () => process.env.SESSION_SECRET || DEV_SESSION_SECRET;
+
+const sign = (value: string) => createHmac("sha256", sessionSecret()).update(value).digest("base64url");
+
+const timingSafeTextEqual = (left: string, right: string) => {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+};
+
+const encodeSessionToken = (session: Session) => {
+  const payload: SessionTokenPayload = {
+    v: TOKEN_VERSION,
+    sid: session.id,
+    userId: session.userId,
+    activeRoleName: session.activeRoleName,
+    expiresAt: session.expiresAt,
+  };
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${body}.${sign(body)}`;
+};
+
+const decodeSessionToken = (sessionId: string): Session | undefined => {
+  const [body, signature, extra] = sessionId.split(".");
+  if (!body || !signature || extra) return undefined;
+  if (!timingSafeTextEqual(sign(body), signature)) return undefined;
+
+  try {
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as Partial<SessionTokenPayload>;
+    if (payload.v !== TOKEN_VERSION || !payload.sid || !payload.userId || !payload.activeRoleName || !payload.expiresAt) {
+      return undefined;
+    }
+    return {
+      id: payload.sid,
+      userId: payload.userId,
+      activeRoleName: payload.activeRoleName,
+      createdAt: new Date(0).toISOString(),
+      expiresAt: payload.expiresAt,
+    };
+  } catch {
+    return undefined;
+  }
+};
+
+const resolveSession = (sessionId: string): Session => {
+  const stored = store.sessions.find((candidate) => candidate.id === sessionId || encodeSessionToken(candidate) === sessionId);
+  const session = stored ?? decodeSessionToken(sessionId);
+  if (!session || session.revokedAt || new Date(session.expiresAt).getTime() < Date.now()) {
+    throw new AppError("Session is invalid", 401, "SESSION_INVALID");
+  }
+  return session;
+};
 
 const rolesForUser = (roleIds: string[]): Role[] => roleIds.map((roleId) => store.roles.find((role) => role.id === roleId)).filter((role): role is Role => Boolean(role));
 
@@ -68,7 +131,7 @@ export const createSession = async (email: string, password: string, selectedRol
   });
 
   return {
-    sessionId: session.id,
+    sessionId: encodeSessionToken(session),
     activeRole: activeRole.name,
     user: {
       id: user.id,
@@ -80,14 +143,13 @@ export const createSession = async (email: string, password: string, selectedRol
 };
 
 export const switchSessionRole = (sessionId: string, selectedRole: string): SessionView => {
-  const session = store.sessions.find((candidate) => candidate.id === sessionId);
-  if (!session || session.revokedAt || new Date(session.expiresAt).getTime() < Date.now()) {
-    throw new AppError("Session is invalid", 401, "SESSION_INVALID");
-  }
-
+  const session = resolveSession(sessionId);
   const context = contextForUser(session.userId, session.activeRoleName);
   const activeRole = resolveActiveRole(context.roles, selectedRole);
-  session.activeRoleName = activeRole.name;
+  const nextSession: Session = { ...session, activeRoleName: activeRole.name };
+  const storedSession = store.sessions.find((candidate) => candidate.id === session.id);
+  if (storedSession) storedSession.activeRoleName = activeRole.name;
+
   appendAudit({
     actorUserId: session.userId,
     action: "auth.role.switch",
@@ -97,7 +159,7 @@ export const switchSessionRole = (sessionId: string, selectedRole: string): Sess
   });
 
   return {
-    sessionId: session.id,
+    sessionId: encodeSessionToken(nextSession),
     activeRole: activeRole.name,
     user: {
       id: context.user.id,
@@ -109,7 +171,7 @@ export const switchSessionRole = (sessionId: string, selectedRole: string): Sess
 };
 
 export const revokeSession = (sessionId: string) => {
-  const session = store.sessions.find((candidate) => candidate.id === sessionId);
+  const session = store.sessions.find((candidate) => candidate.id === sessionId || encodeSessionToken(candidate) === sessionId);
   if (session) {
     session.revokedAt = new Date().toISOString();
     appendAudit({
@@ -123,11 +185,7 @@ export const revokeSession = (sessionId: string) => {
 };
 
 export const requireSession = (sessionId: string): UserContext => {
-  const session = store.sessions.find((candidate) => candidate.id === sessionId);
-  if (!session || session.revokedAt || new Date(session.expiresAt).getTime() < Date.now()) {
-    throw new AppError("Session is invalid", 401, "SESSION_INVALID");
-  }
-
+  const session = resolveSession(sessionId);
   const context = contextForUser(session.userId, session.activeRoleName);
   if (context.user.status !== "active") {
     throw new AppError("Account is inactive", 403, "ACCOUNT_INACTIVE");
@@ -142,4 +200,3 @@ export const requirePermission = (sessionId: string, permission: PermissionKey):
   }
   return context;
 };
-
