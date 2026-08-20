@@ -66,6 +66,23 @@ describe("App", () => {
     expect(localStorage.getItem("shulehub.loginHistory")).toContain("Teacher");
   });
 
+  test("prefilled testing roles still open dashboards when the API function fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      headers: new Headers({ "content-type": "text/plain" }),
+      text: async () => "A server error has occurred FUNCTION_INVOCATION_FAILED",
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Parent" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await screen.findByRole("heading", { name: "Family Portal" });
+    expect(screen.queryByText(/FUNCTION_INVOCATION_FAILED/i)).toBeNull();
+    expect(localStorage.getItem("shulehub.loginHistory")).toContain("parent@demo.school");
+  });
   test("remembered users can reuse or change their role before logging in", () => {
     localStorage.setItem("shulehub.loginHistory", JSON.stringify([{ email: "grace@school.test", name: "Grace", lastRole: "Parent", roles: ["Teacher", "Parent"], lastLoginAt: "2026-08-19T10:00:00.000Z" }]));
 
