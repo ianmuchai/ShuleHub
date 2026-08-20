@@ -218,13 +218,23 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
     expect(screen.getByRole("heading", { name: "User Access Control" })).toBeTruthy();
-    expect(screen.getByText("Verify identity")).toBeTruthy();
-    expect(screen.getByText("Assign role scope")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Verify identity" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Assign role scope" })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
     expect(screen.getByText("Account action")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Submit approval" }));
     expect(screen.getByText("Task ready for approval")).toBeTruthy();
+  });
+  test("workflow review steps are clickable task prompts with relevant step pages", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify identity" }));
+
+    expect(screen.getByRole("heading", { name: "Verify identity" })).toBeTruthy();
+    expect(screen.getByText("Confirm the staff, parent, learner, or bursar record before any sensitive change proceeds.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save step evidence" })).toBeTruthy();
   });
   test("dashboard actions scroll the task workflow into view", () => {
     vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });

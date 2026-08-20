@@ -167,21 +167,46 @@ function DataTable({ title, rows, icon: Icon, onOpen, selected }: { title: strin
   return <section className="module"><header><Icon size={20} /><h3>{title}</h3></header>{rows.map((row, index) => <button className={selected === row ? "table-row selected" : "table-row"} type="button" key={row} onClick={() => onOpen(row)}><span>{row}</span><small>{row.includes("Access") || row.includes("Audit") || row.includes("Integration") ? "Restricted" : "Workspace"}</small><strong>{index % 2 === 0 ? "Ready" : "Review"}</strong></button>)}</section>;
 }
 
+type WorkflowStep = { title: string; detail: string; evidence: string; action: string };
+
+const reviewSteps: WorkflowStep[] = [
+  { title: "Verify identity", detail: "Confirm the staff, parent, learner, or bursar record before any sensitive change proceeds.", evidence: "ID number, staff record, guardian link, or admission number", action: "Save step evidence" },
+  { title: "Review supporting records", detail: "Open the fee, library, admissions, learning, or audit record attached to this workflow before approval.", evidence: "Linked school record and supporting note", action: "Attach record review" },
+  { title: "Assign role scope", detail: "Choose the exact user scope, learner relationship, finance permission, or class stream affected by the action.", evidence: "Role scope, class stream, learner link, and expiry date", action: "Apply scope" },
+  { title: "Check audit requirements", detail: "Confirm the action has a reason, maker-checker approval path, and immutable audit trail before completion.", evidence: "Approval reason and audit classification", action: "Record audit check" },
+];
+
+const confirmSteps = (owner: string): WorkflowStep[] => [
+  { title: "Audit log will be created", detail: "The system will record who performed the action, the role used, the affected record, timestamp, and outcome.", evidence: "Audit event preview", action: "Preview audit log" },
+  { title: "Notifications queued for permitted users", detail: "Only users with permission for this learner, finance account, admission case, or staff record will be notified.", evidence: "Notification recipients and channels", action: "Review notifications" },
+  { title: `Final review assigned to ${owner}`, detail: "The accountable owner receives the final approval task before sensitive changes are considered complete.", evidence: "Owner review note", action: "Assign final review" },
+];
+
+function WorkflowStepPanel({ step, onDone }: { step: WorkflowStep; onDone: () => void }) {
+  return <article className="step-workspace"><header><span className="eyebrow">Selected step</span><h4>{step.title}</h4></header><p>{step.detail}</p><label><span>Evidence required</span><input aria-label="Evidence required" defaultValue={step.evidence} /></label><button type="button" onClick={onDone}><ArrowRight size={18} />{step.action}</button></article>;
+}
+
 function WorkflowDetailPanel({ item }: { item: WorkflowDetailItem }) {
   const [activeTab, setActiveTab] = useState("Review");
   const [submitted, setSubmitted] = useState(false);
+  const [activeStep, setActiveStep] = useState<WorkflowStep>(reviewSteps[0]);
 
   useEffect(() => {
     setActiveTab("Review");
     setSubmitted(false);
+    setActiveStep(reviewSteps[0]);
   }, [item.title]);
 
   const isAccessWorkflow = item.title === "User Access Control" || item.title === "Integration Health" || item.title === "Audit Export";
   const tabs = ["Review", "Complete", "Confirm"];
+  const steps = activeTab === "Confirm" ? confirmSteps(item.owner) : reviewSteps;
+  const openTab = (tab: string) => {
+    setActiveTab(tab);
+    setActiveStep(tab === "Confirm" ? confirmSteps(item.owner)[0] : reviewSteps[0]);
+  };
 
-  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className="task-section"><div className="process-list"><span>Verify identity</span><span>Review supporting records</span><span>Assign role scope</span><span>Check audit requirements</span></div><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button"><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className="task-section"><div className="task-fields"><label><span>{isAccessWorkflow ? "Account action" : "Payment method"}</span><select aria-label={isAccessWorkflow ? "Account action" : "Payment method"} defaultValue={isAccessWorkflow ? "Approve role update" : "M-Pesa"}><option>Approve role update</option><option>Create user</option><option>Suspend access</option><option>M-Pesa</option><option>Bank transfer</option><option>Cash receipt</option></select></label><label><span>{isAccessWorkflow ? "Approval notes" : "Amount to process"}</span><input aria-label={isAccessWorkflow ? "Approval notes" : "Amount to process"} defaultValue={isAccessWorkflow ? "Verified against staff record" : "5000"} /></label></div><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{isAccessWorkflow ? "Submit approval" : "Record payment"}</button>{submitted && <strong className="task-status">Task ready for approval</strong>}</div>}{activeTab === "Confirm" && <div className="task-section"><div className="process-list"><span>Audit log will be created</span><span>Notifications queued for permitted users</span><span>Final review assigned to {item.owner}</span></div><button type="button"><ArrowRight size={18} />{item.next}</button></div>}</section>;
+  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => openTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => setActiveTab("Complete")} /><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button" onClick={() => openTab("Complete")}><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className="task-section"><div className="task-fields"><label><span>{isAccessWorkflow ? "Account action" : "Payment method"}</span><select aria-label={isAccessWorkflow ? "Account action" : "Payment method"} defaultValue={isAccessWorkflow ? "Approve role update" : "M-Pesa"}><option>Approve role update</option><option>Create user</option><option>Suspend access</option><option>M-Pesa</option><option>Bank transfer</option><option>Cash receipt</option></select></label><label><span>{isAccessWorkflow ? "Approval notes" : "Amount to process"}</span><input aria-label={isAccessWorkflow ? "Approval notes" : "Amount to process"} defaultValue={isAccessWorkflow ? "Verified against staff record" : "5000"} /></label></div><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{isAccessWorkflow ? "Submit approval" : "Record payment"}</button>{submitted && <strong className="task-status">Task ready for approval</strong>}</div>}{activeTab === "Confirm" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => setSubmitted(true)} /><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{item.next}</button>{submitted && <strong className="task-status">Task ready for approval</strong>}</div>}</section>;
 }
-
 function Workspace({ dashboard, active, onOpen, selected }: { dashboard: Dashboard; active: WorkspaceKey; onOpen: (row: string) => void; selected?: string }) {
   const linkedIds = dashboard.parentLearners.map((item) => item.learner.id);
   const visibleLoans = linkedIds.length ? loans.filter((loan) => linkedIds.includes(loan.learnerId)) : loans;

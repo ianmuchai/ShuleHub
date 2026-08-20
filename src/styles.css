@@ -860,17 +860,35 @@ input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius:
   gap: 8px;
 }
 
-.process-list span {
-  min-height: 38px;
-  border: 1px solid #e1ebe6;
+.process-list button {
+  min-height: 42px;
+  border: 1px solid #d8e5de;
   border-radius: 6px;
-  padding: 9px 11px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background: #fbfdfc;
   color: #243b31;
   font-size: 0.98rem;
-  font-weight: 800;
+  font-weight: 850;
+  text-align: left;
+}
+
+.process-list button::after {
+  content: "Open";
+  color: #237a5c;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.process-list button:hover,
+.process-list button.active {
+  border-color: #237a5c;
+  background: #eaf7f2;
+  color: #10251d;
+  box-shadow: inset 0 0 0 1px #237a5c;
 }
 
 .task-fields {
@@ -893,6 +911,61 @@ input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius:
   background: #ffffff;
   color: #14251d;
   font: inherit;
+}
+.step-workspace {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #dce7e1;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8fcfa;
+}
+
+.step-workspace header {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.step-workspace h4 {
+  margin: 0;
+  color: #12251d;
+  font-size: 1.12rem;
+  line-height: 1.2;
+}
+
+.step-workspace p {
+  margin: 0;
+  color: #405349;
+  font-size: 1rem;
+}
+
+.step-workspace label {
+  gap: 7px;
+  color: #243b31;
+  font-weight: 850;
+}
+
+.step-workspace input {
+  min-height: 46px;
+  border: 1px solid #c8d8d0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #14251d;
+  font: inherit;
+}
+
+.step-workspace button {
+  min-height: 44px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #173d31;
+  color: #ffffff;
+  font-weight: 900;
 }
 
 .task-section > button {
