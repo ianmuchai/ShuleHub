@@ -186,7 +186,7 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "Daily register" })).toBeTruthy();
     expect(screen.getByText(/Marked present, absent, late, and follow-up notes/i)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Continue workflow" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open attendance register" })).toBeTruthy();
   });
   test("remembered people are presented as active return options", () => {
     localStorage.setItem("shulehub.loginHistory", JSON.stringify([{ email: "grace@school.test", name: "Grace", lastRole: "Parent", roles: ["Teacher", "Parent"], lastLoginAt: "2026-08-19T10:00:00.000Z" }]));
@@ -209,8 +209,8 @@ describe("App", () => {
     expect(screen.getByText("Payment method")).toBeTruthy();
     expect(screen.getByText("Amount to process")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Record payment" }));
-    expect(screen.getByText("Task ready for approval")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Post verified payment allocation" }));
+    expect(screen.getByText("Payment allocation ready for bursar approval")).toBeTruthy();
   });
 
   test("admin workflow pages expose a complete controlled access process", () => {
@@ -223,8 +223,8 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
     expect(screen.getByText("Account action")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Submit approval" }));
-    expect(screen.getByText("Task ready for approval")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Submit scoped access approval" }));
+    expect(screen.getByText("Access change ready for checker approval")).toBeTruthy();
   });
   test("workflow review steps are clickable task prompts with relevant step pages", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
@@ -233,8 +233,8 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Verify identity" }));
 
     expect(screen.getByRole("heading", { name: "Verify identity" })).toBeTruthy();
-    expect(screen.getByText("Confirm the staff, parent, learner, or bursar record before any sensitive change proceeds.")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Save step evidence" })).toBeTruthy();
+    expect(screen.getByText("Confirm the exact person before account, role, or sensitive record changes continue.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save verified identity evidence" })).toBeTruthy();
   });
   test("audit export workflow uses audit-specific clickable steps and preparation fields", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
@@ -254,8 +254,33 @@ describe("App", () => {
     expect(screen.getByText("Export format")).toBeTruthy();
     expect(screen.getByText("Date range")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Generate export package" }));
-    expect(screen.getByText("Export package ready for approval")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Generate signed audit export package" }));
+    expect(screen.getByText("Export package ready for compliance approval")).toBeTruthy();
+  });
+  test("workflow evidence names exact school records and action outcomes", () => {
+    render(<App initialDashboard={dashboard("Parent")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review balance movement" }));
+
+    expect(screen.getByLabelText("Evidence required")).toHaveValue("Invoice INV-2026-041, receipt MPESA-QK82L19, discount approval DISC-004, and Nia Wanjiku ledger balance");
+    expect(screen.getByRole("button", { name: "Attach invoice, receipt, and ledger review" })).toBeTruthy();
+  });
+
+  test("workflow step, tab, and completion clicks scroll changed panels into view", () => {
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
+
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Audit Review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify export authority" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generate signed audit export package" }));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    expect(scrollIntoView).toHaveBeenCalledTimes(4);
   });
   test("dashboard actions scroll the task workflow into view", () => {
     vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });

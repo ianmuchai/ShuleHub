@@ -145,7 +145,7 @@ const workflowForAction = (label: string) => {
 };
 const workflowDetail = (title: string): WorkflowDetailItem => {
   const details: Record<string, WorkflowDetailItem> = {
-    "Daily register": { title: "Daily register", status: "Today", owner: "Class teacher", detail: "Marked present, absent, late, and follow-up notes for the active class stream.", next: "Continue workflow" },
+    "Daily register": { title: "Daily register", status: "Today", owner: "Class teacher", detail: "Marked present, absent, late, and follow-up notes for the active class stream.", next: "Open attendance register" },
     "User Access Control": { title: "User Access Control", status: "Restricted", owner: "Super Admin", detail: "Create users, suspend access, reset credentials, and enforce role boundaries with audit trails.", next: "Open user control" },
     "Academic Year Setup": { title: "Academic Year Setup", status: "Ready", owner: "Deputy Academics", detail: "Configure terms, streams, grading windows, promotion rules, and report release dates.", next: "Edit school calendar" },
     "Integration Health": { title: "Integration Health", status: "Secure", owner: "ICT Admin", detail: "Monitor M-Pesa, SMS, email, backups, webhook signatures, and failed callbacks.", next: "Inspect integrations" },
@@ -156,7 +156,7 @@ const workflowDetail = (title: string): WorkflowDetailItem => {
     "Child Profile": { title: "Child Profile", status: "Linked", owner: "Class teacher", detail: "Open learner biodata, attendance, class placement, guardian links, fees, library, and shared resources.", next: "Open learner profile" },
     "M-Pesa Exceptions": { title: "M-Pesa Exceptions", status: "Needs review", owner: "Bursar", detail: "Inspect failed callbacks, duplicate receipts, reversal requests, and unmatched paybill references.", next: "Resolve exception" }
   };
-  return details[title] ?? { title, status: "Ready", owner: "Workspace owner", detail: "Open the selected record, review the supporting data, and continue the workflow.", next: "Continue workflow" };
+  return details[title] ?? { title, status: "Ready", owner: "Assigned staff owner", detail: `Review ${title} records, confirm the required school evidence, and complete the ${title.toLowerCase()} task with an auditable note.`, next: `Open ${title} task` };
 };
 
 function Stat({ label, value, Icon }: { label: string; value: string | number; Icon: LucideIcon }) {
@@ -171,38 +171,52 @@ type WorkflowStep = { title: string; detail: string; evidence: string; action: s
 type CompletionConfig = { primaryLabel: string; secondaryLabel: string; primaryValue: string; secondaryValue: string; buttonLabel: string; status: string };
 
 const accessReviewSteps: WorkflowStep[] = [
-  { title: "Verify identity", detail: "Confirm the staff, parent, learner, or bursar record before any sensitive change proceeds.", evidence: "ID number, staff record, guardian link, or admission number", action: "Save step evidence" },
-  { title: "Review supporting records", detail: "Open the fee, library, admissions, learning, or audit record attached to this workflow before approval.", evidence: "Linked school record and supporting note", action: "Attach record review" },
-  { title: "Assign role scope", detail: "Choose the exact user scope, learner relationship, finance permission, or class stream affected by the action.", evidence: "Role scope, class stream, learner link, and expiry date", action: "Apply scope" },
-  { title: "Check audit requirements", detail: "Confirm the action has a reason, maker-checker approval path, and immutable audit trail before completion.", evidence: "Approval reason and audit classification", action: "Record audit check" },
+  { title: "Verify identity", detail: "Confirm the exact person before account, role, or sensitive record changes continue.", evidence: "Staff payroll number PAY-0142, national ID ending 4482, school email admin@demo.school, and signed HR appointment letter HR-2026-014", action: "Save verified identity evidence" },
+  { title: "Review supporting records", detail: "Check the source documents that justify the requested account or role change.", evidence: "HR appointment letter HR-2026-014, board minute BM-2026-08-12, previous role audit AUTH-2031, and requester note REQ-771", action: "Attach HR and approval records" },
+  { title: "Assign role scope", detail: "Set exactly which campus, class stream, finance function, learner group, and expiry date the user can access.", evidence: "Scope: Grade 4 East records, finance read-only excluded, library access allowed, expiry 20 Dec 2026", action: "Apply scoped role boundary" },
+  { title: "Check audit requirements", detail: "Confirm maker-checker approval, reason, and audit classification before the role change can be submitted.", evidence: "Checker: Amina Principal, reason: term cover assignment, risk class: privileged access, audit tag AUTH-ROLE-CHANGE", action: "Record maker-checker audit check" },
 ];
 
 const auditReviewSteps: WorkflowStep[] = [
-  { title: "Select audit period", detail: "Choose the exact school term, date range, or incident window that the export should cover.", evidence: "Term 2, 2026 to today", action: "Save audit period" },
-  { title: "Choose audit categories", detail: "Limit the export to the relevant finance, admissions, user-access, learning-resource, or record-change events.", evidence: "Finance, admissions, access control", action: "Save categories" },
-  { title: "Verify export authority", detail: "Confirm the admin has explicit permission to export sensitive audit events.", evidence: "Principal authorization and compliance reason", action: "Record authority" },
-  { title: "Lock export reason", detail: "Capture the purpose of the export so the request itself is visible in the audit trail.", evidence: "Board review and term close compliance", action: "Save export reason" },
+  { title: "Select audit period", detail: "Choose the exact school term, date range, or incident window that the export should cover.", evidence: "Term 2 2026, 01 May 2026 to 20 Aug 2026, incident window FIN-ARREARS-0820, timezone Africa/Nairobi", action: "Save audit period and timezone" },
+  { title: "Choose audit categories", detail: "Limit the export to the relevant finance, admissions, user-access, learning-resource, or record-change events.", evidence: "Categories: finance.receipt, finance.invoice, admissions.offer, auth.role_change, learner.record_update; exclude medical notes", action: "Save audit event categories" },
+  { title: "Verify export authority", detail: "Confirm the admin has explicit permission to export sensitive audit events.", evidence: "Authorization memo COMP-2026-017, approved by Amina Principal, requester Compliance Office, reason Board finance review", action: "Record export authority" },
+  { title: "Lock export reason", detail: "Capture the purpose of the export so the request itself is visible in the audit trail.", evidence: "Export reason: Board audit pack for Term 2 close; retention: 7 years; recipient: compliance@school.test", action: "Lock export reason and retention" },
 ];
 
 const integrationReviewSteps: WorkflowStep[] = [
-  { title: "Check webhook signatures", detail: "Verify callbacks from M-Pesa, SMS, email, and backup services are signed and recent.", evidence: "Latest successful callback and signing key fingerprint", action: "Save signature check" },
-  { title: "Review failed callbacks", detail: "Open failed payment or messaging callbacks before the integration is marked healthy.", evidence: "Failed callback queue and retry outcome", action: "Attach callback review" },
-  { title: "Confirm service secrets", detail: "Confirm API keys and webhook secrets are configured without exposing their raw values.", evidence: "Secret names and last rotation date", action: "Record secret check" },
-  { title: "Queue retry plan", detail: "Schedule safe retries for failed callbacks without duplicating receipts or notifications.", evidence: "Retry batch and owner", action: "Save retry plan" },
+  { title: "Check webhook signatures", detail: "Verify callbacks from M-Pesa, SMS, email, and backup services are signed and recent.", evidence: "M-Pesa callback MPESA-CB-88421, SHA-256 signature key MPESA_LIVE_WEBHOOK, last valid callback 20 Aug 2026 09:42", action: "Save webhook signature proof" },
+  { title: "Review failed callbacks", detail: "Open failed payment or messaging callbacks before the integration is marked healthy.", evidence: "Failed callbacks MPESA-ERR-1021 and SMS-ERR-662, retry count 2, affected receipt INV-2026-041", action: "Attach failed callback review" },
+  { title: "Confirm service secrets", detail: "Confirm API keys and webhook secrets are configured without exposing their raw values.", evidence: "Secret names MPESA_CONSUMER_KEY, MPESA_PASSKEY, SMS_API_TOKEN; last rotated 18 Aug 2026; owner ICT Admin", action: "Record secret rotation check" },
+  { title: "Queue retry plan", detail: "Schedule safe retries for failed callbacks without duplicating receipts or notifications.", evidence: "Retry batch RETRY-2026-0820-01, duplicate guard by checkoutRequestId, owner Carol Bursar", action: "Save safe retry plan" },
 ];
 
 const financeReviewSteps: WorkflowStep[] = [
-  { title: "Confirm learner account", detail: "Verify the learner, guardian, invoice, and receipt records before posting a finance change.", evidence: "Learner admission number and invoice reference", action: "Save account check" },
-  { title: "Review balance movement", detail: "Compare opening balance, invoices, receipts, discounts, and reversals before completion.", evidence: "Balance movement summary", action: "Attach balance review" },
-  { title: "Check payment channel", detail: "Validate M-Pesa, bank, or cash receipt details against the selected account.", evidence: "Receipt reference and channel", action: "Save channel check" },
-  { title: "Queue guardian notice", detail: "Prepare a permitted notice for guardians after the finance task is approved.", evidence: "Guardian notice preview", action: "Save notice" },
+  { title: "Confirm learner account", detail: "Verify the learner, guardian, invoice, and receipt records before posting a finance change.", evidence: "Learner Nia Wanjiku ADM-2026-000, guardian Esther Guardian ID ending 2190, invoice INV-2026-041, account LEDGER-ADM-2026-000", action: "Save learner account verification" },
+  { title: "Review balance movement", detail: "Compare opening balance, invoices, receipts, discounts, and reversals before completion.", evidence: "Invoice INV-2026-041, receipt MPESA-QK82L19, discount approval DISC-004, and Nia Wanjiku ledger balance", action: "Attach invoice, receipt, and ledger review" },
+  { title: "Check payment channel", detail: "Validate M-Pesa, bank, or cash receipt details against the selected account.", evidence: "M-Pesa receipt MPESA-QK82L19, checkout request ws_CO_20082026_1042, paybill 522123, amount KES 5,000", action: "Save payment channel validation" },
+  { title: "Queue guardian notice", detail: "Prepare a permitted notice for guardians after the finance task is approved.", evidence: "Guardian Esther Guardian, SMS template FEE-RECEIPT-01, email statement link masked, delivery after approval", action: "Save guardian notification draft" },
+];
+
+const libraryReviewSteps: WorkflowStep[] = [
+  { title: "Confirm borrower", detail: "Match the borrower to the learner profile and current class stream before renewing or closing a loan.", evidence: "Learner Nia Wanjiku ADM-2026-000, Grade 4 East, library card LIB-ADM-2026-000", action: "Save borrower verification" },
+  { title: "Check book copy", detail: "Verify the exact copy, barcode, due date, and condition before any loan action.", evidence: "Barcode LIB-ENG-042, title The River and the Source, due 26 Aug 2026, condition Good", action: "Attach copy and due-date check" },
+  { title: "Review overdue rules", detail: "Confirm renewal limits, overdue days, and any fee rules before updating the loan.", evidence: "Renewals used 0 of 2, overdue days 0, fine KES 0, library policy LIB-POL-2026", action: "Save overdue rule check" },
+  { title: "Notify guardian and teacher", detail: "Prepare a notice only for linked guardians and the class teacher.", evidence: "Guardian Esther Guardian, teacher David Class Teacher, SMS notice LIB-DUE-01, send date 24 Aug 2026", action: "Queue library notice" },
+];
+
+const admissionsReviewSteps: WorkflowStep[] = [
+  { title: "Confirm applicant file", detail: "Open the application file and confirm the child, guardian, class requested, and intake term.", evidence: "Application APP-2026-118, applicant Brian Otieno, Grade 4 intake, Term 3 2026", action: "Save applicant file check" },
+  { title: "Review required documents", detail: "Check birth certificate, previous school report, guardian ID, and medical declaration status.", evidence: "Birth certificate BC-77821, report card REP-2025-STD3, guardian ID ending 7741, medical form MED-118", action: "Attach admissions documents" },
+  { title: "Schedule interview", detail: "Confirm the interview slot, panel, room, and guardian acknowledgement.", evidence: "Interview 28 Aug 2026 10:30, panel Admissions + Grade Lead, room Admin 2, guardian SMS acknowledged", action: "Save interview schedule" },
+  { title: "Prepare offer controls", detail: "Set offer expiry, admission number reservation, fee deposit, and guardian onboarding steps.", evidence: "Offer expiry 05 Sep 2026, reserved ADM-2026-118, deposit KES 10,000, onboarding checklist ADM-ONB-118", action: "Save offer controls" },
 ];
 
 const learningReviewSteps: WorkflowStep[] = [
-  { title: "Open learner context", detail: "Review the learner, class stream, subject, and teacher owner before changing academic records.", evidence: "Learner or class stream reference", action: "Save context" },
-  { title: "Review learning material", detail: "Check the assignment, resource, assessment, or comment before it is published or updated.", evidence: "Resource title and teacher note", action: "Attach review" },
-  { title: "Set visibility", detail: "Choose whether the item is visible to learners, parents, teachers, or administrators.", evidence: "Audience and release date", action: "Apply visibility" },
-  { title: "Notify allowed users", detail: "Queue the right notification without exposing the item to users outside the role boundary.", evidence: "Recipient group and message", action: "Save notifications" },
+  { title: "Open learner context", detail: "Review the learner, class stream, subject, and teacher owner before changing academic records.", evidence: "Grade 4 East, learner Nia Wanjiku ADM-2026-000, subject Mathematics, teacher David Class Teacher", action: "Save learner context" },
+  { title: "Review learning material", detail: "Check the assignment, resource, assessment, or comment before it is published or updated.", evidence: "Resource Grade 4 Mathematics Practice Pack, CBC strand Numbers, assessment task MAT-G4-0820, teacher note TN-440", action: "Attach learning material review" },
+  { title: "Set visibility", detail: "Choose whether the item is visible to learners, parents, teachers, or administrators.", evidence: "Audience: Grade 4 East learners, linked parents, Mathematics department; release 21 Aug 2026 08:00", action: "Apply resource visibility" },
+  { title: "Notify allowed users", detail: "Queue the right notification without exposing the item to users outside the role boundary.", evidence: "Recipients: Grade 4 East guardians and learners, channel in-app + email, template RESOURCE-PUBLISH-01", action: "Queue learning resource notices" },
 ];
 
 const reviewStepsFor = (title: string) => {
@@ -210,41 +224,49 @@ const reviewStepsFor = (title: string) => {
   if (title === "Integration Health") return integrationReviewSteps;
   if (title === "User Access Control") return accessReviewSteps;
   if (title.includes("Fee") || title.includes("Payment") || title.includes("M-Pesa") || title.includes("Invoice") || title.includes("Statement")) return financeReviewSteps;
+  if (title.includes("Library") || title.includes("Borrowed") || title.includes("loan") || title.includes("River") || title.includes("Atlas")) return libraryReviewSteps;
+  if (title.includes("Application") || title.includes("Offer") || title.includes("Guardian onboarding") || title.includes("Admission")) return admissionsReviewSteps;
   return learningReviewSteps;
 };
 
 const confirmStepsFor = (item: WorkflowDetailItem): WorkflowStep[] => {
   if (item.title === "Audit Export") return [
-    { title: "Seal export checksum", detail: "Create a checksum so the exported audit file can be verified after download.", evidence: "SHA-256 checksum preview", action: "Preview checksum" },
-    { title: "Notify compliance owner", detail: "Send the export package only to the compliance owner and permitted administrators.", evidence: "Compliance recipient list", action: "Review recipients" },
-    { title: "Store export record", detail: "Save the export request, file metadata, reason, and approver into the audit trail.", evidence: "Export archive metadata", action: "Store export record" },
+    { title: "Seal export checksum", detail: "Create a checksum so the exported audit file can be verified after download.", evidence: "SHA-256 checksum for AUDIT-TERM2-2026.zip, generated by Compliance Office, stored with export manifest", action: "Preview export checksum" },
+    { title: "Notify compliance owner", detail: "Send the export package only to the compliance owner and permitted administrators.", evidence: "Recipients compliance@school.test and Amina Principal, delivery channel encrypted email, no guardian or learner recipients", action: "Review compliance recipients" },
+    { title: "Store export record", detail: "Save the export request, file metadata, reason, and approver into the audit trail.", evidence: "Archive record AUD-EXP-2026-0820, approver Amina Principal, retention 7 years, export reason Board finance review", action: "Store export audit record" },
   ];
   return [
-    { title: "Audit log will be created", detail: "The system will record who performed the action, the role used, the affected record, timestamp, and outcome.", evidence: "Audit event preview", action: "Preview audit log" },
-    { title: "Notifications queued for permitted users", detail: "Only users with permission for this learner, finance account, admission case, or staff record will be notified.", evidence: "Notification recipients and channels", action: "Review notifications" },
-    { title: `Final review assigned to ${item.owner}`, detail: "The accountable owner receives the final approval task before sensitive changes are considered complete.", evidence: "Owner review note", action: "Assign final review" },
+    { title: "Audit log will be created", detail: "The system will record who performed the action, the role used, the affected record, timestamp, and outcome.", evidence: `Audit event for ${item.title}, actor role ${item.owner}, timestamp Africa/Nairobi, affected record reference required`, action: "Preview audit log entry" },
+    { title: "Notifications queued for permitted users", detail: "Only users with permission for this learner, finance account, admission case, or staff record will be notified.", evidence: `Permitted recipients for ${item.title}, channel preference, masked learner/account identifiers, notification template ID`, action: "Review permitted recipients" },
+    { title: `Final review assigned to ${item.owner}`, detail: "The accountable owner receives the final approval task before sensitive changes are considered complete.", evidence: `Final owner ${item.owner}, approval SLA 24 hours, escalation to Admin Command Center, maker-checker status`, action: "Assign final owner review" },
   ];
 };
 
 const completionFor = (item: WorkflowDetailItem): CompletionConfig => {
-  if (item.title === "Audit Export") return { primaryLabel: "Export format", secondaryLabel: "Date range", primaryValue: "Signed PDF + CSV", secondaryValue: "This term to today", buttonLabel: "Generate export package", status: "Export package ready for approval" };
-  if (item.title === "Integration Health") return { primaryLabel: "Integration action", secondaryLabel: "Technical note", primaryValue: "Retry failed callbacks", secondaryValue: "Webhook signatures verified", buttonLabel: "Apply integration update", status: "Integration update ready for approval" };
-  if (item.title === "User Access Control") return { primaryLabel: "Account action", secondaryLabel: "Approval notes", primaryValue: "Approve role update", secondaryValue: "Verified against staff record", buttonLabel: "Submit approval", status: "Task ready for approval" };
-  if (item.title.includes("Fee") || item.title.includes("Payment") || item.title.includes("M-Pesa") || item.title.includes("Invoice") || item.title.includes("Statement")) return { primaryLabel: "Payment method", secondaryLabel: "Amount to process", primaryValue: "M-Pesa", secondaryValue: "5000", buttonLabel: "Record payment", status: "Task ready for approval" };
-  return { primaryLabel: "Workflow action", secondaryLabel: "Owner notes", primaryValue: item.next, secondaryValue: `Prepared for ${item.owner}`, buttonLabel: "Save workflow update", status: "Workflow update ready for approval" };
+  if (item.title === "Audit Export") return { primaryLabel: "Export format", secondaryLabel: "Date range", primaryValue: "Signed PDF + CSV with checksum manifest", secondaryValue: "01 May 2026 to 20 Aug 2026, Africa/Nairobi", buttonLabel: "Generate signed audit export package", status: "Export package ready for compliance approval" };
+  if (item.title === "Integration Health") return { primaryLabel: "Integration action", secondaryLabel: "Technical note", primaryValue: "Retry failed callbacks MPESA-ERR-1021 and SMS-ERR-662", secondaryValue: "Webhook signatures verified; no duplicate receipt posting", buttonLabel: "Apply signed integration update", status: "Integration update ready for ICT approval" };
+  if (item.title === "User Access Control") return { primaryLabel: "Account action", secondaryLabel: "Approval notes", primaryValue: "Approve Grade 4 East teacher access until 20 Dec 2026", secondaryValue: "Verified against HR record HR-2026-014 and checker Amina Principal", buttonLabel: "Submit scoped access approval", status: "Access change ready for checker approval" };
+  if (item.title.includes("Fee") || item.title.includes("Payment") || item.title.includes("M-Pesa") || item.title.includes("Invoice") || item.title.includes("Statement")) return { primaryLabel: "Payment method", secondaryLabel: "Amount to process", primaryValue: "M-Pesa receipt MPESA-QK82L19 to invoice INV-2026-041", secondaryValue: "KES 5,000 for Nia Wanjiku ADM-2026-000", buttonLabel: "Post verified payment allocation", status: "Payment allocation ready for bursar approval" };
+  if (item.title.includes("Library") || item.title.includes("Borrowed") || item.title.includes("loan")) return { primaryLabel: "Library action", secondaryLabel: "Loan note", primaryValue: "Renew barcode LIB-ENG-042 for Nia Wanjiku", secondaryValue: "Due 26 Aug 2026; guardian notice queued", buttonLabel: "Save library loan update", status: "Library loan update ready for approval" };
+  return { primaryLabel: `${item.title} action`, secondaryLabel: `${item.owner} evidence note`, primaryValue: item.next, secondaryValue: `Prepared for ${item.owner} with linked learner, class, finance, or library evidence`, buttonLabel: `Save ${item.title} update`, status: `${item.title} update ready for owner approval` };
 };
 
 function WorkflowStepPanel({ step, onDone }: { step: WorkflowStep; onDone: () => void }) {
-  return <article className="step-workspace"><header><span className="eyebrow">Selected step</span><h4>{step.title}</h4></header><p>{step.detail}</p><label><span>Evidence required</span><input aria-label="Evidence required" defaultValue={step.evidence} /></label><button type="button" onClick={onDone}><ArrowRight size={18} />{step.action}</button></article>;
+  return <article className="step-workspace" key={step.title}><header><span className="eyebrow">Selected step</span><h4>{step.title}</h4></header><p>{step.detail}</p><label><span>Evidence required</span><input aria-label="Evidence required" defaultValue={step.evidence} key={step.title} /></label><button type="button" onClick={onDone}><ArrowRight size={18} />{step.action}</button></article>;
 }
 
 function WorkflowDetailPanel({ item }: { item: WorkflowDetailItem }) {
   const reviewSteps = useMemo(() => reviewStepsFor(item.title), [item.title]);
-  const confirmationSteps = useMemo(() => confirmStepsFor(item), [item]);
-  const completion = useMemo(() => completionFor(item), [item]);
+  const confirmationSteps = useMemo(() => confirmStepsFor(item), [item.title, item.owner]);
+  const completion = useMemo(() => completionFor(item), [item.title, item.next, item.owner]);
   const [activeTab, setActiveTab] = useState("Review");
   const [submitted, setSubmitted] = useState(false);
   const [activeStep, setActiveStep] = useState<WorkflowStep>(reviewSteps[0]);
+  const taskBodyRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToChangedPanel = () => {
+    window.requestAnimationFrame(() => taskBodyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
 
   useEffect(() => {
     setActiveTab("Review");
@@ -258,11 +280,19 @@ function WorkflowDetailPanel({ item }: { item: WorkflowDetailItem }) {
     setActiveTab(tab);
     setSubmitted(false);
     setActiveStep(tab === "Confirm" ? confirmationSteps[0] : reviewSteps[0]);
+    scrollToChangedPanel();
+  };
+  const openStep = (step: WorkflowStep) => {
+    setActiveStep(step);
+    scrollToChangedPanel();
+  };
+  const submitTask = () => {
+    setSubmitted(true);
+    scrollToChangedPanel();
   };
 
-  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => openTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => openTab("Complete")} /><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button" onClick={() => openTab("Complete")}><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className="task-section"><div className="task-fields"><label><span>{completion.primaryLabel}</span><input aria-label={completion.primaryLabel} defaultValue={completion.primaryValue} /></label><label><span>{completion.secondaryLabel}</span><input aria-label={completion.secondaryLabel} defaultValue={completion.secondaryValue} /></label></div><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{completion.buttonLabel}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}{activeTab === "Confirm" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => setSubmitted(true)} /><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{item.next}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}</section>;
+  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => openTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className="task-section" ref={taskBodyRef}><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => openStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => openTab("Complete")} /><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button" onClick={() => openTab("Complete")}><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className="task-section" ref={taskBodyRef}><div className="task-fields"><label><span>{completion.primaryLabel}</span><input aria-label={completion.primaryLabel} defaultValue={completion.primaryValue} key={`${item.title}-${completion.primaryLabel}`} /></label><label><span>{completion.secondaryLabel}</span><input aria-label={completion.secondaryLabel} defaultValue={completion.secondaryValue} key={`${item.title}-${completion.secondaryLabel}`} /></label></div><button type="button" onClick={submitTask}><ArrowRight size={18} />{completion.buttonLabel}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}{activeTab === "Confirm" && <div className="task-section" ref={taskBodyRef}><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => openStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={submitTask} /><button type="button" onClick={submitTask}><ArrowRight size={18} />{item.next}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}</section>;
 }
-
 function Workspace({ dashboard, active, onOpen, selected }: { dashboard: Dashboard; active: WorkspaceKey; onOpen: (row: string) => void; selected?: string }) {
   const linkedIds = dashboard.parentLearners.map((item) => item.learner.id);
   const visibleLoans = linkedIds.length ? loans.filter((loan) => linkedIds.includes(loan.learnerId)) : loans;
