@@ -32,6 +32,19 @@ describe("server", () => {
     expect(dashboard.body.role).toBe("Learner");
   });
 
+  test("teacher role dashboard loads even when the teacher is also a guardian", async () => {
+    const app = createApp();
+    const login = await request(app).post("/api/auth/login").send({
+      email: "teacher@demo.school",
+      password: "TeacherPass123!",
+      selectedRole: "Teacher",
+    });
+
+    expect(login.status).toBe(200);
+    const dashboard = await request(app).get("/api/dashboard").set("Authorization", `Bearer ${login.body.sessionId}`);
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.body.role).toBe("Teacher");
+  });
   test("guardian cannot fetch another learner statement", async () => {
     const app = createApp();
     const login = await request(app).post("/api/auth/login").send({

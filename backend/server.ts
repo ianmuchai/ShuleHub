@@ -45,7 +45,7 @@ const dashboardFor = (sessionId: string) => {
       whatsapp: providerStatus(process.env.WHATSAPP_PROVIDER, process.env.WHATSAPP_ACCESS_TOKEN),
       email: providerStatus(process.env.EMAIL_PROVIDER, process.env.EMAIL_API_KEY),
     },
-    parentLearners: context.user.guardianProfileId ? getParentLearnerSummary(sessionId) : [],
+    parentLearners: context.user.guardianProfileId && context.permissions.has("learner:linked:read") ? getParentLearnerSummary(sessionId) : [],
     classes: store.classStreams.map((stream) => ({ ...stream, learners: getLearnersInClass(stream.id).length })),
     recentAudit: store.auditLogs.slice(-6).reverse(),
   };
