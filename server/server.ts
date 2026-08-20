@@ -1,4 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import cors from "cors";
 import { admitApplication, getParentLearnerSummary } from "./admissionsService";
 import { loadConfig } from "./config";
@@ -51,7 +53,9 @@ const dashboardFor = (sessionId: string) => {
   };
 };
 
-export const createApp = () => {
+type AppOptions = { staticDir?: string };
+
+export const createApp = (options: AppOptions = {}) => {
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -118,6 +122,22 @@ export const createApp = () => {
   app.use("/api", apiRoutes);
   app.use(apiRoutes);
 
+  app.use("/api", (_request, response) => {
+    response.status(404).json({ error: { code: "NOT_FOUND", message: "API route was not found" } });
+  });
+
+  const staticDir = options.staticDir ?? resolve(process.cwd(), "dist");
+  const indexFile = resolve(staticDir, "index.html");
+  if (existsSync(indexFile)) {
+    app.use(express.static(staticDir));
+    app.get("*", (request, response, next) => {
+      if (request.path.startsWith("/api")) {
+        next();
+        return;
+      }
+      response.sendFile(indexFile);
+    });
+  }
   app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
     if (isAppError(error)) {
       response.status(error.statusCode).json({ error: { code: error.code, message: error.message } });

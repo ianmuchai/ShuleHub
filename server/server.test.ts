@@ -1,4 +1,7 @@
 import request from "supertest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { beforeEach, describe, expect, test } from "vitest";
 import { createApp } from "./server";
 import { resetStore } from "./store";
@@ -72,6 +75,26 @@ describe("server", () => {
     const dashboard = await request(freshApp).get("/api/dashboard").set("Authorization", `Bearer ${login.body.sessionId}`);
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.role).toBe("Parent");
+  });
+  test("serves the built frontend and API from one production app", async () => {
+    const staticDir = mkdtempSync(join(tmpdir(), "shulehub-dist-"));
+    writeFileSync(join(staticDir, "index.html"), "<html><body><div id=\"root\">ShuleHub shell</div></body></html>");
+
+    try {
+      const app = createApp({ staticDir });
+      const page = await request(app).get("/");
+      const api = await request(app).get("/api/health");
+      const fallback = await request(app).get("/family/records");
+
+      expect(page.status).toBe(200);
+      expect(page.text).toContain("ShuleHub shell");
+      expect(api.status).toBe(200);
+      expect(api.body).toMatchObject({ ok: true, service: "ShuleHub" });
+      expect(fallback.status).toBe(200);
+      expect(fallback.text).toContain("ShuleHub shell");
+    } finally {
+      rmSync(staticDir, { recursive: true, force: true });
+    }
   });
   test("guardian cannot fetch another learner statement", async () => {
     const app = createApp();

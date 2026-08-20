@@ -1,4 +1,4 @@
 import app from "../server/index";
-import { vercelPathApp } from "../server/vercelAdapter";
+import { vercelApiApp } from "../server/vercelAdapter";
 
-export default vercelPathApp(app, "/api/health");
+export default vercelApiApp(app);

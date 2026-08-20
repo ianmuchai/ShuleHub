@@ -24,18 +24,19 @@ npm install
 npm test
 npm run typecheck
 npm run build
+npm run start
 npm run dev
 ```
 
-The backend runs on `http://127.0.0.1:4000`. For frontend development, run `npm run dev:frontend` in another terminal and open `http://127.0.0.1:5173`.
+For production-style local testing, run `npm run build` and then `npm run start`; one Express server will serve both the built frontend and `/api/*` on `http://127.0.0.1:4000`. For frontend-only development, run `npm run dev` for the API and `npm run dev:frontend` in another terminal, then open `http://127.0.0.1:5173`.
 
 ## Vercel Deployment Prep
 
 This repository uses the stable Vite plus Vercel Functions deployment shape:
 
 - `vercel.json` pins the project to the Vite preset with `dist` output.
-- `server/index.ts` exposes the Express app used by the API functions.
-- Concrete `api/**/*.ts` files map Vercel `/api/*` routes to the Express app.
+- `server/index.ts` exposes the Express app used by the API function.
+- `api/index.ts` is the only Vercel function and handles all `/api/*` routes through a rewrite, keeping Hobby deployments under the function limit.
 
 Suggested Vercel project settings:
 
