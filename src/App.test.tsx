@@ -109,7 +109,7 @@ describe("App", () => {
   test("admin portal exposes system controls that are hidden from parents", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
     expect(screen.getByRole("heading", { name: "Admin Command Center" })).toBeTruthy();
-    expect(screen.getByText("User Access Control"));
+    expect(screen.getAllByText("User Access Control").length).toBeGreaterThan(0);
     expect(screen.getByText("Integration Health"));
   });
 
@@ -136,12 +136,53 @@ describe("App", () => {
 
   test("student and admissions experiences are specific to their workflows", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Learner")} />);
-    expect(screen.getByRole("heading", { name: "Student Desk" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Student Portal" })).toBeTruthy();
     expect(screen.getByText("Assignments"));
 
     rerender(<App initialDashboard={dashboard("Admissions Officer")} />);
     expect(screen.getByRole("heading", { name: "Admissions Desk" })).toBeTruthy();
-    expect(screen.getByText("Application Pipeline"));
+    expect(screen.getAllByText("Application Pipeline").length).toBeGreaterThan(0);
+  });
+  test("learner role opens a dedicated student portal with clickable school tasks", () => {
+    render(<App initialDashboard={dashboard("Learner")} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Student Portal" })).toBeTruthy();
+    expect(screen.getByText("Nia Wanjiku")).toBeTruthy();
+    expect(screen.getByText("Grade 4 East")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open today's mathematics assignment" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open attendance calendar" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open borrowed book record" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open fee summary" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open today's mathematics assignment" }));
+    expect(screen.getByRole("heading", { name: "Mathematics Assignment" })).toBeTruthy();
+    expect(screen.getByLabelText("Evidence required")).toHaveValue("Grade 4 East assignment MAT-G4-0820, teacher David Class Teacher, due 23 Aug 2026, learner Nia Wanjiku");
+  });
+
+  test("student portal starts with a concrete learner task instead of a placeholder workflow", () => {
+    render(<App initialDashboard={dashboard("Learner")} />);
+
+    expect(screen.getByRole("heading", { name: "Mathematics Assignment" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Current workflow" })).toBeNull();
+  });
+  test("student portal is available only to relevant learner, guardian, teacher, and admin roles", () => {
+    const { rerender } = render(<App initialDashboard={dashboard("Parent")} />);
+    expect(screen.getByRole("button", { name: "Student Portal" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Student Portal" }));
+    expect(screen.getByText("Guardian view")).toBeTruthy();
+
+    rerender(<App initialDashboard={dashboard("Teacher")} />);
+    expect(screen.getByRole("button", { name: "Student Portal" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Student Portal" }));
+    expect(screen.getByText("Teacher view")).toBeTruthy();
+
+    rerender(<App initialDashboard={dashboard("Super Admin")} />);
+    expect(screen.getByRole("button", { name: "Student Portal" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Student Portal" }));
+    expect(screen.getByText("Administrator view")).toBeTruthy();
+
+    rerender(<App initialDashboard={dashboard("Finance Officer")} />);
+    expect(screen.queryByRole("button", { name: "Student Portal" })).toBeNull();
   });
   test("signed-in users can return to the role login page", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
@@ -157,7 +198,7 @@ describe("App", () => {
   test("admin controls are explicit and stay hidden from family accounts", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Super Admin")} />);
     expect(screen.getByRole("heading", { name: "Admin Command Center" })).toBeTruthy();
-    expect(screen.getByText("User Access Control")).toBeTruthy();
+    expect(screen.getAllByText("User Access Control").length).toBeGreaterThan(0);
     expect(screen.getByText("Academic Year Setup")).toBeTruthy();
     expect(screen.getByText("Integration Health")).toBeTruthy();
     expect(screen.getByText("Audit Export")).toBeTruthy();
