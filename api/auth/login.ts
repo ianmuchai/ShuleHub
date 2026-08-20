@@ -1,1 +1,4 @@
-export { default } from "../../server/index";
+import app from "../../server/index";
+import { vercelPathApp } from "../../server/vercelAdapter";
+
+export default vercelPathApp(app, "/api/auth/login");
