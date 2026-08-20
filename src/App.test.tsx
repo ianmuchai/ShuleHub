@@ -188,7 +188,13 @@ describe("App", () => {
     expect(screen.getByText(/Marked present, absent, late, and follow-up notes/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Continue workflow" })).toBeTruthy();
   });
+  test("remembered people are presented as active return options", () => {
+    localStorage.setItem("shulehub.loginHistory", JSON.stringify([{ email: "grace@school.test", name: "Grace", lastRole: "Parent", roles: ["Teacher", "Parent"], lastLoginAt: "2026-08-19T10:00:00.000Z" }]));
+
+    render(<App />);
+
+    const remembered = screen.getByRole("button", { name: /Grace Parent/i });
+    expect(remembered).toBeEnabled();
+    expect(remembered).toHaveClass("returning-user-card");
+  });
 });
-
-
-

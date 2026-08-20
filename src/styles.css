@@ -484,3 +484,156 @@ input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius:
   .balance-callout,
   .detail-meta { display: grid; }
 }
+
+/* Brighter front page polish */
+.login-screen {
+  position: relative;
+  min-height: 100vh;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(120deg, rgba(244, 251, 248, 0.94), rgba(255, 249, 232, 0.9)),
+    url("https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80") center/cover;
+}
+
+.login-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.24));
+  pointer-events: none;
+}
+
+.login-card {
+  position: relative;
+  width: min(100%, 560px);
+  border: 1px solid rgba(31, 107, 83, 0.24);
+  border-radius: 8px;
+  padding: clamp(26px, 5vw, 46px);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 24px 70px rgba(35, 73, 55, 0.16);
+}
+
+.login-card > p {
+  color: #1f6b53;
+  font-size: 0.95rem;
+}
+
+.login-card h1 {
+  color: #123228;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+}
+
+.brand-mark {
+  background: #1f6b53;
+  box-shadow: 0 14px 28px rgba(31, 107, 83, 0.22);
+}
+
+.remembered-logins,
+.role-picker {
+  gap: 12px;
+}
+
+.returning-user-card,
+.role-picker button {
+  border: 1px solid #bfd9cf;
+  background: #ffffff;
+  color: #123228;
+  box-shadow: 0 10px 24px rgba(31, 80, 61, 0.08);
+}
+
+.returning-user-card {
+  min-height: 62px;
+  position: relative;
+  padding: 12px 14px 12px 18px;
+}
+
+.returning-user-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: #d8a93a;
+}
+
+.returning-user-card span {
+  color: #102c23;
+  font-size: 1.04rem;
+  font-weight: 900;
+}
+
+.returning-user-card strong {
+  color: #17684e;
+  font-size: 0.98rem;
+  font-weight: 900;
+}
+
+.returning-user-card:hover,
+.role-picker button:hover,
+.role-picker button.selected {
+  border-color: #1f6b53;
+  background: #f4fbf8;
+  color: #102c23;
+  box-shadow: 0 14px 30px rgba(31, 107, 83, 0.16);
+}
+
+.role-picker button {
+  min-height: 48px;
+  border-radius: 6px;
+  color: #214739;
+}
+
+.role-picker button.selected {
+  outline: 3px solid rgba(216, 169, 58, 0.35);
+  outline-offset: 0;
+}
+
+.login-card label {
+  color: #19382c;
+}
+
+.login-card input {
+  border-color: #b8cec4;
+  background: #ffffff;
+  color: #10231b;
+  box-shadow: inset 0 1px 0 rgba(18, 50, 40, 0.04);
+}
+
+.login-card input:focus-visible {
+  border-color: #1f6b53;
+}
+
+.login-card form > button[type="submit"] {
+  background: #1f6b53;
+  color: #ffffff;
+  box-shadow: 0 16px 30px rgba(31, 107, 83, 0.2);
+}
+
+.login-card form > button[type="submit"]:hover {
+  background: #245d49;
+}
+
+@media (min-width: 1000px) {
+  .login-screen {
+    justify-items: end;
+    padding-right: max(48px, 9vw);
+  }
+}
+
+@media (max-width: 620px) {
+  .login-screen {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 22px;
+  }
+
+  .returning-user-card,
+  .role-picker button {
+    min-height: 54px;
+  }
+}
