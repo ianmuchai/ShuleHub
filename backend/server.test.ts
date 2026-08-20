@@ -45,6 +45,19 @@ describe("server", () => {
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.role).toBe("Teacher");
   });
+  test("auth routes also work when a service router forwards without the api prefix", async () => {
+    const app = createApp();
+    const login = await request(app).post("/auth/login").send({
+      email: "parent@demo.school",
+      password: "ParentPass123!",
+      selectedRole: "Parent",
+    });
+
+    expect(login.status).toBe(200);
+    const dashboard = await request(app).get("/dashboard").set("Authorization", `Bearer ${login.body.sessionId}`);
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.body.role).toBe("Parent");
+  });
   test("guardian cannot fetch another learner statement", async () => {
     const app = createApp();
     const login = await request(app).post("/api/auth/login").send({

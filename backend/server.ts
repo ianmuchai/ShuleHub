@@ -56,62 +56,67 @@ export const createApp = () => {
   app.use(cors());
   app.use(express.json());
 
-  app.get("/api/health", (_request, response) => {
+  const apiRoutes = express.Router();
+
+  apiRoutes.get("/health", (_request, response) => {
     response.json({ ok: true, service: "ShuleHub" });
   });
 
-  app.post("/api/auth/login", asyncRoute(async (request, response) => {
+  apiRoutes.post("/auth/login", asyncRoute(async (request, response) => {
     const session = await createSession(String(request.body.email ?? ""), String(request.body.password ?? ""), request.body.selectedRole ? String(request.body.selectedRole) : undefined);
     response.json(session);
   }));
 
-  app.post("/api/auth/switch-role", asyncRoute((request, response) => {
+  apiRoutes.post("/auth/switch-role", asyncRoute((request, response) => {
     const sessionId = sessionIdFromRequest(request);
     response.json(switchSessionRole(sessionId, String(request.body.selectedRole ?? "")));
   }));
 
-  app.get("/api/me", asyncRoute((request, response) => {
+  apiRoutes.get("/me", asyncRoute((request, response) => {
     const sessionId = sessionIdFromRequest(request);
     const context = requireSession(sessionId);
     response.json({ user: context.user, activeRole: context.activeRole.name, roles: context.roles.map((role) => role.name) });
   }));
 
-  app.get("/api/dashboard", asyncRoute((request, response) => {
+  apiRoutes.get("/dashboard", asyncRoute((request, response) => {
     response.json(dashboardFor(sessionIdFromRequest(request)));
   }));
 
-  app.post("/api/admissions/admit", asyncRoute((request, response) => {
+  apiRoutes.post("/admissions/admit", asyncRoute((request, response) => {
     const learner = admitApplication(sessionIdFromRequest(request), request.body);
     response.status(201).json(learner);
   }));
 
-  app.post("/api/attendance", asyncRoute((request, response) => {
+  apiRoutes.post("/attendance", asyncRoute((request, response) => {
     response.status(201).json(markAttendance(sessionIdFromRequest(request), request.body));
   }));
 
-  app.post("/api/finance/invoices", asyncRoute((request, response) => {
+  apiRoutes.post("/finance/invoices", asyncRoute((request, response) => {
     response.status(201).json(createInvoice(sessionIdFromRequest(request), request.body));
   }));
 
-  app.post("/api/finance/payments/mpesa", asyncRoute((request, response) => {
+  apiRoutes.post("/finance/payments/mpesa", asyncRoute((request, response) => {
     response.status(201).json(initiateMpesaPayment(sessionIdFromRequest(request), request.body));
   }));
 
-  app.get("/api/finance/statements/:learnerId", asyncRoute((request, response) => {
+  apiRoutes.get("/finance/statements/:learnerId", asyncRoute((request, response) => {
     response.json(getStatement(sessionIdFromRequest(request), request.params.learnerId));
   }));
 
-  app.post("/api/mpesa/callback", asyncRoute((request, response) => {
+  apiRoutes.post("/mpesa/callback", asyncRoute((request, response) => {
     response.json(handleMpesaCallback(request.body));
   }));
 
-  app.post("/api/notifications/test", asyncRoute((request, response) => {
+  apiRoutes.post("/notifications/test", asyncRoute((request, response) => {
     response.json(sendNotification(request.body, process.env.SMS_PROVIDER, process.env.SMS_API_KEY));
   }));
 
-  app.get("/api/classes/:classStreamId", asyncRoute((request, response) => {
+  apiRoutes.get("/classes/:classStreamId", asyncRoute((request, response) => {
     response.json({ classStream: getClassStream(request.params.classStreamId), learners: getLearnersInClass(request.params.classStreamId) });
   }));
+
+  app.use("/api", apiRoutes);
+  app.use(apiRoutes);
 
   app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
     if (isAppError(error)) {
