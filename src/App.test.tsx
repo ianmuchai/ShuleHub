@@ -236,6 +236,27 @@ describe("App", () => {
     expect(screen.getByText("Confirm the staff, parent, learner, or bursar record before any sensitive change proceeds.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Save step evidence" })).toBeTruthy();
   });
+  test("audit export workflow uses audit-specific clickable steps and preparation fields", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Audit Review" }));
+
+    expect(screen.queryByRole("button", { name: "Verify identity" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Select audit period" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Verify export authority" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Verify export authority" }));
+    expect(screen.getByRole("heading", { name: "Verify export authority" })).toBeTruthy();
+    expect(screen.getByText("Confirm the admin has explicit permission to export sensitive audit events.")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Prepare audit export" }));
+    expect(screen.getByRole("tab", { name: "Complete" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("Export format")).toBeTruthy();
+    expect(screen.getByText("Date range")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Generate export package" }));
+    expect(screen.getByText("Export package ready for approval")).toBeTruthy();
+  });
   test("dashboard actions scroll the task workflow into view", () => {
     vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });
     const scrollIntoView = vi.fn();

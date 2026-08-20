@@ -168,25 +168,80 @@ function DataTable({ title, rows, icon: Icon, onOpen, selected }: { title: strin
 }
 
 type WorkflowStep = { title: string; detail: string; evidence: string; action: string };
+type CompletionConfig = { primaryLabel: string; secondaryLabel: string; primaryValue: string; secondaryValue: string; buttonLabel: string; status: string };
 
-const reviewSteps: WorkflowStep[] = [
+const accessReviewSteps: WorkflowStep[] = [
   { title: "Verify identity", detail: "Confirm the staff, parent, learner, or bursar record before any sensitive change proceeds.", evidence: "ID number, staff record, guardian link, or admission number", action: "Save step evidence" },
   { title: "Review supporting records", detail: "Open the fee, library, admissions, learning, or audit record attached to this workflow before approval.", evidence: "Linked school record and supporting note", action: "Attach record review" },
   { title: "Assign role scope", detail: "Choose the exact user scope, learner relationship, finance permission, or class stream affected by the action.", evidence: "Role scope, class stream, learner link, and expiry date", action: "Apply scope" },
   { title: "Check audit requirements", detail: "Confirm the action has a reason, maker-checker approval path, and immutable audit trail before completion.", evidence: "Approval reason and audit classification", action: "Record audit check" },
 ];
 
-const confirmSteps = (owner: string): WorkflowStep[] => [
-  { title: "Audit log will be created", detail: "The system will record who performed the action, the role used, the affected record, timestamp, and outcome.", evidence: "Audit event preview", action: "Preview audit log" },
-  { title: "Notifications queued for permitted users", detail: "Only users with permission for this learner, finance account, admission case, or staff record will be notified.", evidence: "Notification recipients and channels", action: "Review notifications" },
-  { title: `Final review assigned to ${owner}`, detail: "The accountable owner receives the final approval task before sensitive changes are considered complete.", evidence: "Owner review note", action: "Assign final review" },
+const auditReviewSteps: WorkflowStep[] = [
+  { title: "Select audit period", detail: "Choose the exact school term, date range, or incident window that the export should cover.", evidence: "Term 2, 2026 to today", action: "Save audit period" },
+  { title: "Choose audit categories", detail: "Limit the export to the relevant finance, admissions, user-access, learning-resource, or record-change events.", evidence: "Finance, admissions, access control", action: "Save categories" },
+  { title: "Verify export authority", detail: "Confirm the admin has explicit permission to export sensitive audit events.", evidence: "Principal authorization and compliance reason", action: "Record authority" },
+  { title: "Lock export reason", detail: "Capture the purpose of the export so the request itself is visible in the audit trail.", evidence: "Board review and term close compliance", action: "Save export reason" },
 ];
+
+const integrationReviewSteps: WorkflowStep[] = [
+  { title: "Check webhook signatures", detail: "Verify callbacks from M-Pesa, SMS, email, and backup services are signed and recent.", evidence: "Latest successful callback and signing key fingerprint", action: "Save signature check" },
+  { title: "Review failed callbacks", detail: "Open failed payment or messaging callbacks before the integration is marked healthy.", evidence: "Failed callback queue and retry outcome", action: "Attach callback review" },
+  { title: "Confirm service secrets", detail: "Confirm API keys and webhook secrets are configured without exposing their raw values.", evidence: "Secret names and last rotation date", action: "Record secret check" },
+  { title: "Queue retry plan", detail: "Schedule safe retries for failed callbacks without duplicating receipts or notifications.", evidence: "Retry batch and owner", action: "Save retry plan" },
+];
+
+const financeReviewSteps: WorkflowStep[] = [
+  { title: "Confirm learner account", detail: "Verify the learner, guardian, invoice, and receipt records before posting a finance change.", evidence: "Learner admission number and invoice reference", action: "Save account check" },
+  { title: "Review balance movement", detail: "Compare opening balance, invoices, receipts, discounts, and reversals before completion.", evidence: "Balance movement summary", action: "Attach balance review" },
+  { title: "Check payment channel", detail: "Validate M-Pesa, bank, or cash receipt details against the selected account.", evidence: "Receipt reference and channel", action: "Save channel check" },
+  { title: "Queue guardian notice", detail: "Prepare a permitted notice for guardians after the finance task is approved.", evidence: "Guardian notice preview", action: "Save notice" },
+];
+
+const learningReviewSteps: WorkflowStep[] = [
+  { title: "Open learner context", detail: "Review the learner, class stream, subject, and teacher owner before changing academic records.", evidence: "Learner or class stream reference", action: "Save context" },
+  { title: "Review learning material", detail: "Check the assignment, resource, assessment, or comment before it is published or updated.", evidence: "Resource title and teacher note", action: "Attach review" },
+  { title: "Set visibility", detail: "Choose whether the item is visible to learners, parents, teachers, or administrators.", evidence: "Audience and release date", action: "Apply visibility" },
+  { title: "Notify allowed users", detail: "Queue the right notification without exposing the item to users outside the role boundary.", evidence: "Recipient group and message", action: "Save notifications" },
+];
+
+const reviewStepsFor = (title: string) => {
+  if (title === "Audit Export") return auditReviewSteps;
+  if (title === "Integration Health") return integrationReviewSteps;
+  if (title === "User Access Control") return accessReviewSteps;
+  if (title.includes("Fee") || title.includes("Payment") || title.includes("M-Pesa") || title.includes("Invoice") || title.includes("Statement")) return financeReviewSteps;
+  return learningReviewSteps;
+};
+
+const confirmStepsFor = (item: WorkflowDetailItem): WorkflowStep[] => {
+  if (item.title === "Audit Export") return [
+    { title: "Seal export checksum", detail: "Create a checksum so the exported audit file can be verified after download.", evidence: "SHA-256 checksum preview", action: "Preview checksum" },
+    { title: "Notify compliance owner", detail: "Send the export package only to the compliance owner and permitted administrators.", evidence: "Compliance recipient list", action: "Review recipients" },
+    { title: "Store export record", detail: "Save the export request, file metadata, reason, and approver into the audit trail.", evidence: "Export archive metadata", action: "Store export record" },
+  ];
+  return [
+    { title: "Audit log will be created", detail: "The system will record who performed the action, the role used, the affected record, timestamp, and outcome.", evidence: "Audit event preview", action: "Preview audit log" },
+    { title: "Notifications queued for permitted users", detail: "Only users with permission for this learner, finance account, admission case, or staff record will be notified.", evidence: "Notification recipients and channels", action: "Review notifications" },
+    { title: `Final review assigned to ${item.owner}`, detail: "The accountable owner receives the final approval task before sensitive changes are considered complete.", evidence: "Owner review note", action: "Assign final review" },
+  ];
+};
+
+const completionFor = (item: WorkflowDetailItem): CompletionConfig => {
+  if (item.title === "Audit Export") return { primaryLabel: "Export format", secondaryLabel: "Date range", primaryValue: "Signed PDF + CSV", secondaryValue: "This term to today", buttonLabel: "Generate export package", status: "Export package ready for approval" };
+  if (item.title === "Integration Health") return { primaryLabel: "Integration action", secondaryLabel: "Technical note", primaryValue: "Retry failed callbacks", secondaryValue: "Webhook signatures verified", buttonLabel: "Apply integration update", status: "Integration update ready for approval" };
+  if (item.title === "User Access Control") return { primaryLabel: "Account action", secondaryLabel: "Approval notes", primaryValue: "Approve role update", secondaryValue: "Verified against staff record", buttonLabel: "Submit approval", status: "Task ready for approval" };
+  if (item.title.includes("Fee") || item.title.includes("Payment") || item.title.includes("M-Pesa") || item.title.includes("Invoice") || item.title.includes("Statement")) return { primaryLabel: "Payment method", secondaryLabel: "Amount to process", primaryValue: "M-Pesa", secondaryValue: "5000", buttonLabel: "Record payment", status: "Task ready for approval" };
+  return { primaryLabel: "Workflow action", secondaryLabel: "Owner notes", primaryValue: item.next, secondaryValue: `Prepared for ${item.owner}`, buttonLabel: "Save workflow update", status: "Workflow update ready for approval" };
+};
 
 function WorkflowStepPanel({ step, onDone }: { step: WorkflowStep; onDone: () => void }) {
   return <article className="step-workspace"><header><span className="eyebrow">Selected step</span><h4>{step.title}</h4></header><p>{step.detail}</p><label><span>Evidence required</span><input aria-label="Evidence required" defaultValue={step.evidence} /></label><button type="button" onClick={onDone}><ArrowRight size={18} />{step.action}</button></article>;
 }
 
 function WorkflowDetailPanel({ item }: { item: WorkflowDetailItem }) {
+  const reviewSteps = useMemo(() => reviewStepsFor(item.title), [item.title]);
+  const confirmationSteps = useMemo(() => confirmStepsFor(item), [item]);
+  const completion = useMemo(() => completionFor(item), [item]);
   const [activeTab, setActiveTab] = useState("Review");
   const [submitted, setSubmitted] = useState(false);
   const [activeStep, setActiveStep] = useState<WorkflowStep>(reviewSteps[0]);
@@ -195,18 +250,19 @@ function WorkflowDetailPanel({ item }: { item: WorkflowDetailItem }) {
     setActiveTab("Review");
     setSubmitted(false);
     setActiveStep(reviewSteps[0]);
-  }, [item.title]);
+  }, [item.title, reviewSteps]);
 
-  const isAccessWorkflow = item.title === "User Access Control" || item.title === "Integration Health" || item.title === "Audit Export";
   const tabs = ["Review", "Complete", "Confirm"];
-  const steps = activeTab === "Confirm" ? confirmSteps(item.owner) : reviewSteps;
+  const steps = activeTab === "Confirm" ? confirmationSteps : reviewSteps;
   const openTab = (tab: string) => {
     setActiveTab(tab);
-    setActiveStep(tab === "Confirm" ? confirmSteps(item.owner)[0] : reviewSteps[0]);
+    setSubmitted(false);
+    setActiveStep(tab === "Confirm" ? confirmationSteps[0] : reviewSteps[0]);
   };
 
-  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => openTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => setActiveTab("Complete")} /><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button" onClick={() => openTab("Complete")}><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className="task-section"><div className="task-fields"><label><span>{isAccessWorkflow ? "Account action" : "Payment method"}</span><select aria-label={isAccessWorkflow ? "Account action" : "Payment method"} defaultValue={isAccessWorkflow ? "Approve role update" : "M-Pesa"}><option>Approve role update</option><option>Create user</option><option>Suspend access</option><option>M-Pesa</option><option>Bank transfer</option><option>Cash receipt</option></select></label><label><span>{isAccessWorkflow ? "Approval notes" : "Amount to process"}</span><input aria-label={isAccessWorkflow ? "Approval notes" : "Amount to process"} defaultValue={isAccessWorkflow ? "Verified against staff record" : "5000"} /></label></div><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{isAccessWorkflow ? "Submit approval" : "Record payment"}</button>{submitted && <strong className="task-status">Task ready for approval</strong>}</div>}{activeTab === "Confirm" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => setSubmitted(true)} /><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{item.next}</button>{submitted && <strong className="task-status">Task ready for approval</strong>}</div>}</section>;
+  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => openTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => openTab("Complete")} /><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button" onClick={() => openTab("Complete")}><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className="task-section"><div className="task-fields"><label><span>{completion.primaryLabel}</span><input aria-label={completion.primaryLabel} defaultValue={completion.primaryValue} /></label><label><span>{completion.secondaryLabel}</span><input aria-label={completion.secondaryLabel} defaultValue={completion.secondaryValue} /></label></div><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{completion.buttonLabel}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}{activeTab === "Confirm" && <div className="task-section"><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => setActiveStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => setSubmitted(true)} /><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{item.next}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}</section>;
 }
+
 function Workspace({ dashboard, active, onOpen, selected }: { dashboard: Dashboard; active: WorkspaceKey; onOpen: (row: string) => void; selected?: string }) {
   const linkedIds = dashboard.parentLearners.map((item) => item.learner.id);
   const visibleLoans = linkedIds.length ? loans.filter((loan) => linkedIds.includes(loan.learnerId)) : loans;
