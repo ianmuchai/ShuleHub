@@ -38,9 +38,24 @@ const api = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
       ...(options.headers ?? {}),
     },
   });
-  const body = await response.json();
+  const contentType = response.headers?.get("content-type") ?? "";
+  const canReadJson = typeof response.json === "function";
+  const canReadText = typeof response.text === "function";
+  const body = contentType.includes("application/json") || (canReadJson && !canReadText)
+    ? await response.json()
+    : canReadText
+      ? await response.text()
+      : null;
   if (!response.ok) {
-    throw new Error(body.error?.message ?? "Request failed");
+    const message = typeof body === "object" && body !== null && "error" in body
+      ? (body as { error?: { message?: string } }).error?.message
+      : typeof body === "string" && body.trim()
+        ? `API request failed (${response.status}): ${body.slice(0, 160)}`
+        : `API request failed (${response.status})`;
+    throw new Error(message ?? "Request failed");
+  }
+  if (typeof body === "string") {
+    throw new Error(`API request failed (${response.status}): Expected JSON response`);
   }
   return body;
 };
