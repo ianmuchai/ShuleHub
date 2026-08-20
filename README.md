@@ -33,17 +33,16 @@ The backend runs on `http://127.0.0.1:4000`. For frontend development, run `npm 
 
 This repository includes:
 
-- `vercel.json` for Vite static output and `/api/*` rewrites.
-- `api/index.ts` to expose the existing Express app as a Vercel function.
-- `npm run build` as the production build command.
-- `dist` as the Vercel output directory.
+- `vercel.json` with Vercel Services for the Vite frontend and Express backend.
+- `backend/index.ts` to expose the existing Express app as the backend service.
+- `/api/*` routed to the backend service and all other paths routed to the frontend service.
 
 Suggested Vercel project settings:
 
-- Framework Preset: `Vite`
-- Build Command: `npm run build`
-- Output Directory: `dist`
-- Install Command: `npm install`
+- Framework Preset: `Services`
+- Root Directory: `./`
+- Frontend service: root `.`, framework `vite`
+- Backend service: root `backend`, framework `express`
 
 Set production environment variables in Vercel before using real integrations.
 
@@ -84,3 +83,4 @@ Copy `.env.example` to `.env` locally and add matching values in Vercel Project 
 ## Current Storage
 
 This build uses an in-memory repository with a typed store boundary so workflows can be tested immediately. Production persistence is the next infrastructure step: replace the store implementation with PostgreSQL migrations and transactional repositories while preserving service interfaces.
+
