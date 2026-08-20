@@ -925,3 +925,49 @@ input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius:
 .workflow-anchor {
   scroll-margin-top: 24px;
 }
+
+/* Restore library shelves landing hero */
+.login-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(10, 42, 32, 0.78), rgba(48, 76, 67, 0.44)),
+    url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1500&q=80") center/cover;
+}
+
+.login-screen::before {
+  display: none;
+}
+
+.login-card {
+  width: min(100%, 520px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  padding: clamp(26px, 5vw, 42px);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 24px 70px rgba(3, 25, 15, 0.28);
+}
+
+.login-card > p {
+  color: #375a4b;
+}
+
+.login-card h1 {
+  color: #10251d;
+}
+
+@media (min-width: 1000px) {
+  .login-screen {
+    justify-items: end;
+    padding-right: max(42px, 8vw);
+  }
+}
+
+@media (max-width: 620px) {
+  .login-screen {
+    padding: 16px;
+    place-items: center;
+  }
+}
