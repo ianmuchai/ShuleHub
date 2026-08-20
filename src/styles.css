@@ -637,3 +637,176 @@ input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius:
     min-height: 54px;
   }
 }
+
+/* Clean login front page reset */
+.login-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+  background:
+    radial-gradient(circle at top left, rgba(74, 144, 117, 0.14), transparent 34%),
+    linear-gradient(180deg, #f8fbf9 0%, #edf4f0 100%);
+}
+
+.login-screen::before {
+  display: none;
+}
+
+.login-card {
+  width: min(100%, 520px);
+  border: 1px solid #d8e4dd;
+  border-radius: 8px;
+  padding: 34px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(31, 58, 46, 0.12);
+}
+
+.login-card > p {
+  margin-bottom: 6px;
+  color: #587066;
+  font-size: 0.86rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.login-card h1 {
+  color: #12251d;
+  font-size: clamp(2.3rem, 5vw, 3.35rem);
+  line-height: 1;
+}
+
+.brand-mark {
+  width: 54px;
+  height: 54px;
+  margin-bottom: 18px;
+  background: #237a5c;
+  box-shadow: none;
+}
+
+.remembered-logins {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #edf2ef;
+}
+
+.role-picker {
+  margin-top: 18px;
+}
+
+.remembered-logins,
+.role-picker {
+  gap: 10px;
+}
+
+.returning-user-card {
+  min-height: 58px;
+  border: 1px solid #c9ddd3;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 2px;
+  background: #f7fbf9;
+  color: #142b21;
+  text-align: left;
+  box-shadow: none;
+}
+
+.returning-user-card::before {
+  display: none;
+}
+
+.returning-user-card span {
+  color: #132a21;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.returning-user-card strong {
+  color: #237a5c;
+  font-size: 0.92rem;
+  font-weight: 850;
+}
+
+.role-picker button {
+  min-height: 48px;
+  border: 1px solid #d4e1da;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #173329;
+  font-size: 0.98rem;
+  font-weight: 850;
+  box-shadow: none;
+}
+
+.role-picker button:hover,
+.returning-user-card:hover {
+  border-color: #237a5c;
+  background: #f0faf6;
+  color: #10251d;
+  box-shadow: 0 8px 18px rgba(35, 122, 92, 0.1);
+}
+
+.role-picker button.selected {
+  border-color: #237a5c;
+  background: #e8f6f1;
+  color: #10251d;
+  outline: 0;
+  box-shadow: inset 0 0 0 1px #237a5c;
+}
+
+.login-card form {
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.login-card label {
+  color: #233a31;
+  font-size: 0.96rem;
+  font-weight: 850;
+}
+
+.login-card input {
+  min-height: 50px;
+  border: 1px solid #c8d8d0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #12251d;
+  box-shadow: none;
+}
+
+.login-card input:focus-visible {
+  border-color: #237a5c;
+  outline-color: rgba(35, 122, 92, 0.32);
+}
+
+.login-card form > button[type="submit"] {
+  min-height: 52px;
+  border-radius: 8px;
+  background: #237a5c;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(35, 122, 92, 0.18);
+}
+
+.login-card form > button[type="submit"]:hover {
+  background: #1d644b;
+}
+
+@media (min-width: 1000px) {
+  .login-screen {
+    justify-items: center;
+    padding-right: 18px;
+  }
+}
+
+@media (max-width: 620px) {
+  .login-card {
+    padding: 24px 18px;
+  }
+
+  .login-card h1 {
+    font-size: 2.45rem;
+  }
+}
