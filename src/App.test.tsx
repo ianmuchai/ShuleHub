@@ -197,4 +197,33 @@ describe("App", () => {
     expect(remembered).toBeEnabled();
     expect(remembered).toHaveClass("returning-user-card");
   });
+  test("dashboard actions open tabbed task pages that can be completed", () => {
+    render(<App initialDashboard={dashboard("Parent")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    expect(screen.getByRole("tab", { name: "Review" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Complete" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Confirm" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    expect(screen.getByText("Payment method")).toBeTruthy();
+    expect(screen.getByText("Amount to process")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Record payment" }));
+    expect(screen.getByText("Task ready for approval")).toBeTruthy();
+  });
+
+  test("admin workflow pages expose a complete controlled access process", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
+    expect(screen.getByRole("heading", { name: "User Access Control" })).toBeTruthy();
+    expect(screen.getByText("Verify identity")).toBeTruthy();
+    expect(screen.getByText("Assign role scope")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    expect(screen.getByText("Account action")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Submit approval" }));
+    expect(screen.getByText("Task ready for approval")).toBeTruthy();
+  });
 });

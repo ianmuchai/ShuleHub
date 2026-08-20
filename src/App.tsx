@@ -122,6 +122,27 @@ const actionsForRole = (role: string): Action[] => {
   return [{ label: "Manage Users", key: "settings" }, { label: "Secure Integrations", key: "settings" }, { label: "Audit Review", key: "audit" }];
 };
 
+
+const workflowForAction = (label: string) => {
+  const map: Record<string, string> = {
+    "Manage Users": "User Access Control",
+    "Secure Integrations": "Integration Health",
+    "Audit Review": "Audit Export",
+    "Fee Statement": "Fee Statement",
+    "Library Loans": "Library Loans",
+    "Child Profile": "Child Profile",
+    "Open Register": "Daily register",
+    "Assessment Entry": "Assessment entry",
+    "Publish Resource": "Resource publishing",
+    "Invoice Runs": "Invoice runs",
+    "M-Pesa Exceptions": "M-Pesa Exceptions",
+    "Statement Exports": "Statement exports",
+    "Pipeline Review": "Application Pipeline",
+    "Offer Letters": "Offer letter",
+    "Guardian Records": "Guardian onboarding"
+  };
+  return map[label] ?? label;
+};
 const workflowDetail = (title: string): WorkflowDetailItem => {
   const details: Record<string, WorkflowDetailItem> = {
     "Daily register": { title: "Daily register", status: "Today", owner: "Class teacher", detail: "Marked present, absent, late, and follow-up notes for the active class stream.", next: "Continue workflow" },
@@ -147,7 +168,18 @@ function DataTable({ title, rows, icon: Icon, onOpen, selected }: { title: strin
 }
 
 function WorkflowDetailPanel({ item }: { item: WorkflowDetailItem }) {
-  return <section className="module detail-panel"><span className="eyebrow">Open workflow</span><h3>{item.title}</h3><p>{item.detail}</p><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button"><ArrowRight size={18} />{item.next}</button></section>;
+  const [activeTab, setActiveTab] = useState("Review");
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    setActiveTab("Review");
+    setSubmitted(false);
+  }, [item.title]);
+
+  const isAccessWorkflow = item.title === "User Access Control" || item.title === "Integration Health" || item.title === "Audit Export";
+  const tabs = ["Review", "Complete", "Confirm"];
+
+  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className="task-section"><div className="process-list"><span>Verify identity</span><span>Review supporting records</span><span>Assign role scope</span><span>Check audit requirements</span></div><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button"><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className="task-section"><div className="task-fields"><label><span>{isAccessWorkflow ? "Account action" : "Payment method"}</span><select aria-label={isAccessWorkflow ? "Account action" : "Payment method"} defaultValue={isAccessWorkflow ? "Approve role update" : "M-Pesa"}><option>Approve role update</option><option>Create user</option><option>Suspend access</option><option>M-Pesa</option><option>Bank transfer</option><option>Cash receipt</option></select></label><label><span>{isAccessWorkflow ? "Approval notes" : "Amount to process"}</span><input aria-label={isAccessWorkflow ? "Approval notes" : "Amount to process"} defaultValue={isAccessWorkflow ? "Verified against staff record" : "5000"} /></label></div><button type="button" onClick={() => setSubmitted(true)}><ArrowRight size={18} />{isAccessWorkflow ? "Submit approval" : "Record payment"}</button>{submitted && <strong className="task-status">Task ready for approval</strong>}</div>}{activeTab === "Confirm" && <div className="task-section"><div className="process-list"><span>Audit log will be created</span><span>Notifications queued for permitted users</span><span>Final review assigned to {item.owner}</span></div><button type="button"><ArrowRight size={18} />{item.next}</button></div>}</section>;
 }
 
 function Workspace({ dashboard, active, onOpen, selected }: { dashboard: Dashboard; active: WorkspaceKey; onOpen: (row: string) => void; selected?: string }) {
@@ -181,10 +213,10 @@ function DashboardView({ dashboard, onRoleChange, onSignOut }: { dashboard: Dash
 
   const openArea = (key: WorkspaceKey, workflow?: string) => {
     setActive(key);
-    setSelectedWorkflow(workflowDetail(workflow ?? key));
+    setSelectedWorkflow(workflowDetail(workflowForAction(workflow ?? key)));
   };
 
-  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => openArea(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="session-tools"><div className="trust"><ShieldCheck size={18} />Role-secured session</div>{assignableRoles.length > 1 && <div className="role-switcher" aria-label="Switch active role">{assignableRoles.map((role) => role === dashboard.role ? <span className="current-role" key={role}>{roleDisplay(role)}</span> : <button type="button" key={role} onClick={() => onRoleChange(role)}>Switch to {roleDisplay(role)}</button>)}</div>}<button className="sign-out" type="button" onClick={onSignOut}><LogOut size={18} />Sign out</button></div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => openArea(action.key, action.label)}>{action.label}</button>)}</section><section className="work-grid"><Workspace dashboard={dashboard} active={active} onOpen={(row) => setSelectedWorkflow(workflowDetail(row))} selected={selectedWorkflow.title} /><WorkflowDetailPanel item={selectedWorkflow} /><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} onOpen={(row) => setSelectedWorkflow(workflowDetail(row))} selected={selectedWorkflow.title} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} onOpen={(row) => setSelectedWorkflow(workflowDetail(row))} selected={selectedWorkflow.title} />}</section></section></main>;
+  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => openArea(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="session-tools"><div className="trust"><ShieldCheck size={18} />Role-secured session</div>{assignableRoles.length > 1 && <div className="role-switcher" aria-label="Switch active role">{assignableRoles.map((role) => role === dashboard.role ? <span className="current-role" key={role}>{roleDisplay(role)}</span> : <button type="button" key={role} onClick={() => onRoleChange(role)}>Switch to {roleDisplay(role)}</button>)}</div>}<button className="sign-out" type="button" onClick={onSignOut}><LogOut size={18} />Sign out</button></div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => openArea(action.key, workflowForAction(action.label))}>{action.label}</button>)}</section><section className="work-grid"><Workspace dashboard={dashboard} active={active} onOpen={(row) => setSelectedWorkflow(workflowDetail(row))} selected={selectedWorkflow.title} /><WorkflowDetailPanel item={selectedWorkflow} /><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} onOpen={(row) => setSelectedWorkflow(workflowDetail(row))} selected={selectedWorkflow.title} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} onOpen={(row) => setSelectedWorkflow(workflowDetail(row))} selected={selectedWorkflow.title} />}</section></section></main>;
 }
 export default function App({ initialDashboard }: AppProps) {
   const [email, setEmail] = useState("");
