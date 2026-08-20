@@ -109,8 +109,8 @@ describe("App", () => {
   test("admin portal exposes system controls that are hidden from parents", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
     expect(screen.getByRole("heading", { name: "Admin Command Center" })).toBeTruthy();
-    expect(screen.getByText("Users & Roles"));
-    expect(screen.getByText("Integration Vault"));
+    expect(screen.getByText("User Access Control"));
+    expect(screen.getByText("Integration Health"));
   });
 
   test("parent portal focuses on the child record, library loans, fees, and resources", () => {
@@ -142,6 +142,51 @@ describe("App", () => {
     rerender(<App initialDashboard={dashboard("Admissions Officer")} />);
     expect(screen.getByRole("heading", { name: "Admissions Desk" })).toBeTruthy();
     expect(screen.getByText("Application Pipeline"));
+  });
+  test("signed-in users can return to the role login page", () => {
+    render(<App initialDashboard={dashboard("Parent")} />);
+    expect(screen.getByRole("heading", { name: "Family Portal" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(screen.getByRole("heading", { name: "ShuleHub" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Teacher" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Parent" })).toBeTruthy();
+  });
+
+  test("admin controls are explicit and stay hidden from family accounts", () => {
+    const { rerender } = render(<App initialDashboard={dashboard("Super Admin")} />);
+    expect(screen.getByRole("heading", { name: "Admin Command Center" })).toBeTruthy();
+    expect(screen.getByText("User Access Control")).toBeTruthy();
+    expect(screen.getByText("Academic Year Setup")).toBeTruthy();
+    expect(screen.getByText("Integration Health")).toBeTruthy();
+    expect(screen.getByText("Audit Export")).toBeTruthy();
+
+    rerender(<App initialDashboard={dashboard("Parent")} />);
+    expect(screen.queryByText("Integration Health")).toBeNull();
+    expect(screen.queryByText("Audit Export")).toBeNull();
+  });
+
+  test("workflow buttons open focused panels with role-specific data", () => {
+    render(<App initialDashboard={dashboard("Parent")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    expect(screen.getByRole("heading", { name: "Fee Statement & Payments" })).toBeTruthy();
+    expect(screen.getByText("Current balance")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Library Loans" }));
+    expect(screen.getByRole("heading", { name: "Borrowed Books" })).toBeTruthy();
+    expect(screen.getByText("LIB-ENG-042")).toBeTruthy();
+  });
+
+  test("table row buttons open a clear workflow detail panel", () => {
+    render(<App initialDashboard={dashboard("Teacher")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Daily register/i }));
+
+    expect(screen.getByRole("heading", { name: "Daily register" })).toBeTruthy();
+    expect(screen.getByText(/Marked present, absent, late, and follow-up notes/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Continue workflow" })).toBeTruthy();
   });
 });
 
