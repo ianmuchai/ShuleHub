@@ -147,6 +147,7 @@ const workflowDetail = (title: string): WorkflowDetailItem => {
   const details: Record<string, WorkflowDetailItem> = {
     "Daily register": { title: "Daily register", status: "Today", owner: "Class teacher", detail: "Marked present, absent, late, and follow-up notes for the active class stream.", next: "Open attendance register" },
     "User Access Control": { title: "User Access Control", status: "Restricted", owner: "Super Admin", detail: "Create users, suspend access, reset credentials, and enforce role boundaries with audit trails.", next: "Open user control" },
+    "Staff Role Assignments": { title: "Staff Role Assignments", status: "Restricted", owner: "HR Manager", detail: "Review staff appointment records, role assignment request, approval scope, and maker-checker audit controls.", next: "Open staff role assignment" },
     "Academic Year Setup": { title: "Academic Year Setup", status: "Ready", owner: "Deputy Academics", detail: "Configure terms, streams, grading windows, promotion rules, and report release dates.", next: "Edit school calendar" },
     "Integration Health": { title: "Integration Health", status: "Secure", owner: "ICT Admin", detail: "Monitor M-Pesa, SMS, email, backups, webhook signatures, and failed callbacks.", next: "Inspect integrations" },
     "Audit Export": { title: "Audit Export", status: "Controlled", owner: "Compliance", detail: "Export tamper-evident logs for finance, admissions, account access, and record edits.", next: "Prepare audit export" },
@@ -164,7 +165,7 @@ function Stat({ label, value, Icon }: { label: string; value: string | number; I
 }
 
 function DataTable({ title, rows, icon: Icon, onOpen, selected }: { title: string; rows: string[]; icon: LucideIcon; onOpen: (row: string) => void; selected?: string }) {
-  return <section className="module"><header><Icon size={20} /><h3>{title}</h3></header>{rows.map((row, index) => <button className={selected === row ? "table-row selected" : "table-row"} type="button" key={row} onClick={() => onOpen(row)}><span>{row}</span><small>{row.includes("Access") || row.includes("Audit") || row.includes("Integration") ? "Restricted" : "Workspace"}</small><strong>{index % 2 === 0 ? "Ready" : "Review"}</strong></button>)}</section>;
+  return <section className="module"><header><Icon size={20} /><h3>{title}</h3></header>{rows.map((row, index) => <button className={selected === row ? "table-row selected" : "table-row"} type="button" key={row} onClick={() => onOpen(row)} aria-label={row}><span>{row}</span><small>{row.includes("Access") || row.includes("Audit") || row.includes("Integration") || row.includes("Role") ? "Restricted" : "Workspace"}</small><strong>{index % 2 === 0 ? "Ready" : "Review"}</strong></button>)}</section>;
 }
 
 type WorkflowStep = { title: string; detail: string; evidence: string; action: string };
@@ -177,6 +178,12 @@ const accessReviewSteps: WorkflowStep[] = [
   { title: "Check audit requirements", detail: "Confirm maker-checker approval, reason, and audit classification before the role change can be submitted.", evidence: "Checker: Amina Principal, reason: term cover assignment, risk class: privileged access, audit tag AUTH-ROLE-CHANGE", action: "Record maker-checker audit check" },
 ];
 
+const staffRoleReviewSteps: WorkflowStep[] = [
+  { title: "Verify staff identity", detail: "Confirm the staff member before changing teaching, bursary, library, admissions, or administrator permissions.", evidence: "Staff payroll number PAY-0142, national ID ending 4482, school email admin@demo.school, and signed HR appointment letter HR-2026-014", action: "Save staff identity evidence" },
+  { title: "Review appointment authority", detail: "Check the HR appointment file and the written request for the role assignment.", evidence: "Appointment letter HR-2026-014, role request REQ-771, department head approval DPT-088, board minute BM-2026-08-12", action: "Attach HR authority records" },
+  { title: "Set staff role scope", detail: "Choose the exact staff role, campus, class stream, finance limit, library permission, and expiry date.", evidence: "Role: Grade 4 East teacher, campus Main, finance access none, library circulation allowed, expiry 20 Dec 2026", action: "Apply staff role scope" },
+  { title: "Check segregation of duties", detail: "Confirm the staff member is not being given conflicting maker and checker privileges.", evidence: "Maker role teaching-record updates only, checker excluded for finance and user-admin actions, audit tag AUTH-SOD-2026-014", action: "Record segregation check" },
+];
 const auditReviewSteps: WorkflowStep[] = [
   { title: "Select audit period", detail: "Choose the exact school term, date range, or incident window that the export should cover.", evidence: "Term 2 2026, 01 May 2026 to 20 Aug 2026, incident window FIN-ARREARS-0820, timezone Africa/Nairobi", action: "Save audit period and timezone" },
   { title: "Choose audit categories", detail: "Limit the export to the relevant finance, admissions, user-access, learning-resource, or record-change events.", evidence: "Categories: finance.receipt, finance.invoice, admissions.offer, auth.role_change, learner.record_update; exclude medical notes", action: "Save audit event categories" },
@@ -222,6 +229,7 @@ const learningReviewSteps: WorkflowStep[] = [
 const reviewStepsFor = (title: string) => {
   if (title === "Audit Export") return auditReviewSteps;
   if (title === "Integration Health") return integrationReviewSteps;
+  if (title === "Staff Role Assignments") return staffRoleReviewSteps;
   if (title === "User Access Control") return accessReviewSteps;
   if (title.includes("Fee") || title.includes("Payment") || title.includes("M-Pesa") || title.includes("Invoice") || title.includes("Statement")) return financeReviewSteps;
   if (title.includes("Library") || title.includes("Borrowed") || title.includes("loan") || title.includes("River") || title.includes("Atlas")) return libraryReviewSteps;
@@ -246,6 +254,7 @@ const completionFor = (item: WorkflowDetailItem): CompletionConfig => {
   if (item.title === "Audit Export") return { primaryLabel: "Export format", secondaryLabel: "Date range", primaryValue: "Signed PDF + CSV with checksum manifest", secondaryValue: "01 May 2026 to 20 Aug 2026, Africa/Nairobi", buttonLabel: "Generate signed audit export package", status: "Export package ready for compliance approval" };
   if (item.title === "Integration Health") return { primaryLabel: "Integration action", secondaryLabel: "Technical note", primaryValue: "Retry failed callbacks MPESA-ERR-1021 and SMS-ERR-662", secondaryValue: "Webhook signatures verified; no duplicate receipt posting", buttonLabel: "Apply signed integration update", status: "Integration update ready for ICT approval" };
   if (item.title === "User Access Control") return { primaryLabel: "Account action", secondaryLabel: "Approval notes", primaryValue: "Approve Grade 4 East teacher access until 20 Dec 2026", secondaryValue: "Verified against HR record HR-2026-014 and checker Amina Principal", buttonLabel: "Submit scoped access approval", status: "Access change ready for checker approval" };
+  if (item.title === "Staff Role Assignments") return { primaryLabel: "Staff role action", secondaryLabel: "HR approval note", primaryValue: "Assign Grade 4 East class-teacher scope to PAY-0142 until 20 Dec 2026", secondaryValue: "Appointment HR-2026-014 verified; no finance checker privilege granted", buttonLabel: "Submit staff role assignment for checker approval", status: "Staff role assignment ready for HR checker approval" };
   if (item.title.includes("Fee") || item.title.includes("Payment") || item.title.includes("M-Pesa") || item.title.includes("Invoice") || item.title.includes("Statement")) return { primaryLabel: "Payment method", secondaryLabel: "Amount to process", primaryValue: "M-Pesa receipt MPESA-QK82L19 to invoice INV-2026-041", secondaryValue: "KES 5,000 for Nia Wanjiku ADM-2026-000", buttonLabel: "Post verified payment allocation", status: "Payment allocation ready for bursar approval" };
   if (item.title.includes("Library") || item.title.includes("Borrowed") || item.title.includes("loan")) return { primaryLabel: "Library action", secondaryLabel: "Loan note", primaryValue: "Renew barcode LIB-ENG-042 for Nia Wanjiku", secondaryValue: "Due 26 Aug 2026; guardian notice queued", buttonLabel: "Save library loan update", status: "Library loan update ready for approval" };
   return { primaryLabel: `${item.title} action`, secondaryLabel: `${item.owner} evidence note`, primaryValue: item.next, secondaryValue: `Prepared for ${item.owner} with linked learner, class, finance, or library evidence`, buttonLabel: `Save ${item.title} update`, status: `${item.title} update ready for owner approval` };

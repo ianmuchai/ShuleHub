@@ -226,7 +226,21 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Submit scoped access approval" }));
     expect(screen.getByText("Access change ready for checker approval")).toBeTruthy();
   });
-  test("workflow review steps are clickable task prompts with relevant step pages", () => {
+  test("staff role assignments use staff access evidence instead of learner resource steps", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Staff Role Assignments" }));
+
+    expect(screen.getByRole("heading", { name: "Staff Role Assignments" })).toBeTruthy();
+    expect(screen.getByText("Review staff appointment records, role assignment request, approval scope, and maker-checker audit controls.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Verify staff identity" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Open learner context" })).toBeNull();
+    expect(screen.getByText("HR Manager")).toBeTruthy();
+    expect(screen.getAllByText("Restricted").length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Verify staff identity" }));
+    expect(screen.getByLabelText("Evidence required")).toHaveValue("Staff payroll number PAY-0142, national ID ending 4482, school email admin@demo.school, and signed HR appointment letter HR-2026-014");
+  });  test("workflow review steps are clickable task prompts with relevant step pages", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
