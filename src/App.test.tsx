@@ -226,4 +226,14 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Submit approval" }));
     expect(screen.getByText("Task ready for approval")).toBeTruthy();
   });
+  test("dashboard actions scroll the task workflow into view", () => {
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
+
+    render(<App initialDashboard={dashboard("Parent")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+  });
 });

@@ -921,3 +921,7 @@ input { width: 100%; min-height: 52px; border: 1px solid #aebbb2; border-radius:
     grid-template-columns: 1fr;
   }
 }
+
+.workflow-anchor {
+  scroll-margin-top: 24px;
+}
