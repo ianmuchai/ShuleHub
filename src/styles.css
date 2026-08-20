@@ -777,8 +777,9 @@ select {
 
 @media (min-width: 1040px) {
   .login-screen {
-    justify-items: end;
-    padding-right: max(34px, 7vw);
+    justify-items: center;
+    padding-left: clamp(12px, 2.8vh, 24px);
+    padding-right: clamp(12px, 2.8vh, 24px);
   }
 }
 
