@@ -31,20 +31,21 @@ The backend runs on `http://127.0.0.1:4000`. For frontend development, run `npm 
 
 ## Vercel Deployment Prep
 
-This repository includes:
+This repository uses the stable Vite plus Vercel Functions deployment shape:
 
-- `vercel.json` with Vercel Services for the Vite frontend and Express backend.
-- `backend/index.ts` to expose the existing Express app as the backend service.
-- `/api/*` routed to the backend service and all other paths routed to the frontend service.
+- `vercel.json` pins the project to the Vite preset with `dist` output.
+- `server/index.ts` exposes the Express app used by the API functions.
+- Concrete `api/**/*.ts` files map Vercel `/api/*` routes to the Express app.
 
 Suggested Vercel project settings:
 
-- Framework Preset: `Services`
+- Framework Preset: `Vite`
 - Root Directory: `./`
-- Frontend service: root `.`, framework `vite`
-- Backend service: root `backend`, framework `express`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+- Install Command: `npm install`
 
-Set production environment variables in Vercel before using real integrations.
+Do not use the Vercel `Services` preset for this repository. Set production environment variables in Vercel before using real integrations.
 
 ## Production Integration Variables
 

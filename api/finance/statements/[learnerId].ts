@@ -1,1 +1,1 @@
-export { default } from "../../../backend/index";
+export { default } from "../../../server/index";

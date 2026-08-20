@@ -10,7 +10,7 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["backend/**/*.ts"]
+  "include": ["server/**/*.ts", "api/**/*.ts"]
 }
 
 
