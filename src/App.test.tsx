@@ -83,15 +83,17 @@ describe("App", () => {
     expect(screen.queryByText(/FUNCTION_INVOCATION_FAILED/i)).toBeNull();
     expect(localStorage.getItem("shulehub.loginHistory")).toContain("parent@demo.school");
   });
-  test("remembered users can reuse or change their role before logging in", () => {
+  test("landing page hides login history and offers a clean remember-password option", () => {
     localStorage.setItem("shulehub.loginHistory", JSON.stringify([{ email: "grace@school.test", name: "Grace", lastRole: "Parent", roles: ["Teacher", "Parent"], lastLoginAt: "2026-08-19T10:00:00.000Z" }]));
 
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: /Grace Parent/i }));
-    expect(screen.getByLabelText("Email")).toHaveValue("grace@school.test");
-    expect(screen.getByRole("button", { name: "Parent" })).toHaveClass("selected");
+
+    expect(screen.queryByRole("button", { name: /Grace Parent/i })).toBeNull();
+    expect(screen.queryByLabelText("Remembered people")).toBeNull();
+    expect(screen.getByLabelText("Remember password")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Teacher" }));
+    expect(screen.getByLabelText("Email")).toHaveValue("teacher@demo.school");
     expect(screen.getByRole("button", { name: "Teacher" })).toHaveClass("selected");
   });
 
@@ -229,14 +231,14 @@ describe("App", () => {
     expect(screen.getByText(/Marked present, absent, late, and follow-up notes/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Open attendance register" })).toBeTruthy();
   });
-  test("remembered people are presented as active return options", () => {
+  test("landing page does not render returning-user history cards", () => {
     localStorage.setItem("shulehub.loginHistory", JSON.stringify([{ email: "grace@school.test", name: "Grace", lastRole: "Parent", roles: ["Teacher", "Parent"], lastLoginAt: "2026-08-19T10:00:00.000Z" }]));
 
     render(<App />);
 
-    const remembered = screen.getByRole("button", { name: /Grace Parent/i });
-    expect(remembered).toBeEnabled();
-    expect(remembered).toHaveClass("returning-user-card");
+    expect(screen.queryByRole("button", { name: /Grace Parent/i })).toBeNull();
+    expect(screen.queryByText("Grace")).toBeNull();
+    expect(screen.getByLabelText("Remember password")).not.toBeChecked();
   });
   test("dashboard actions open tabbed task pages that can be completed", () => {
     render(<App initialDashboard={dashboard("Parent")} />);

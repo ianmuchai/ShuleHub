@@ -441,16 +441,13 @@ export default function App({ initialDashboard }: AppProps) {
   const [selectedRole, setSelectedRole] = useState("");
   const [sessionId, setSessionId] = useState("");
   const [dashboard, setDashboard] = useState<Dashboard | null>(initialDashboard ?? null);
-  const [history, setHistory] = useState<LoginHistoryItem[]>([]);
+  const [rememberPassword, setRememberPassword] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setDashboard(initialDashboard ?? null);
   }, [initialDashboard]);
 
-  useEffect(() => {
-    setHistory(readLoginHistory());
-  }, []);
 
   const remember = (nextDashboard: Dashboard, activeRole: string) => {
     const item = {
@@ -461,7 +458,6 @@ export default function App({ initialDashboard }: AppProps) {
       lastLoginAt: new Date().toISOString(),
     };
     writeLoginHistory(item);
-    setHistory(readLoginHistory());
   };
 
   const submit = async (event: FormEvent) => {
@@ -491,10 +487,6 @@ export default function App({ initialDashboard }: AppProps) {
     }
   };
 
-  const useRememberedLogin = (item: LoginHistoryItem) => {
-    setEmail(item.email);
-    setSelectedRole(item.lastRole);
-  };
 
   const useTestingRole = (role: typeof roleOptions[number]) => {
     setSelectedRole(role.value);
@@ -532,5 +524,5 @@ export default function App({ initialDashboard }: AppProps) {
   };
   if (dashboard) return <DashboardView dashboard={dashboard} onRoleChange={handleRoleChange} onSignOut={signOut} />;
 
-  return <main className="login-screen"><section className="login-card" aria-labelledby="login-title"><div className="brand-mark"><GraduationCap size={34} /></div><p>Secure access</p><h1 id="login-title">{productName}</h1><div className="login-signals"><span>Attendance</span><span>Fees</span><span>Learning</span><span>Messages</span><span>Security</span></div>{history.length > 0 && <section className="remembered-logins" aria-label="Remembered people">{history.map((item) => <button className="returning-user-card" type="button" key={item.email} onClick={() => useRememberedLogin(item)}><span>{item.name}</span><strong>{roleDisplay(item.lastRole)}</strong></button>)}</section>}<section className="role-picker" aria-label="Choose login role">{roleOptions.map((role) => <button className={selectedRole === role.value ? "selected" : ""} type="button" key={role.value} onClick={() => useTestingRole(role)}>{role.label}</button>)}</section><form onSubmit={submit}><label>Email<input aria-label="Email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" /></label><label>Password<input aria-label="Password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" /></label>{error && <p className="form-error">{error}</p>}<button type="submit"><LockKeyhole size={18} />Sign in</button></form></section></main>;
+  return <main className="login-screen"><section className="login-card" aria-labelledby="login-title"><div className="brand-mark"><GraduationCap size={34} /></div><p>Secure access</p><h1 id="login-title">{productName}</h1><div className="login-signals"><span>Attendance</span><span>Fees</span><span>Learning</span><span>Messages</span><span>Security</span></div><label className="remember-password"><input aria-label="Remember password" type="checkbox" checked={rememberPassword} onChange={(event) => setRememberPassword(event.target.checked)} />Remember password</label><section className="role-picker" aria-label="Choose login role">{roleOptions.map((role) => <button className={selectedRole === role.value ? "selected" : ""} type="button" key={role.value} onClick={() => useTestingRole(role)}>{role.label}</button>)}</section><form onSubmit={submit}><label>Email<input aria-label="Email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" /></label><label>Password<input aria-label="Password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" /></label>{error && <p className="form-error">{error}</p>}<button type="submit"><LockKeyhole size={18} />Sign in</button></form></section></main>;
 }

@@ -127,26 +127,12 @@ h3 {
   font-size: clamp(2.15rem, 5vh, 3.2rem);
 }
 
-.remembered-logins,
 .role-picker {
   display: grid;
   gap: 8px;
-}
-
-.remembered-logins {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-height: 112px;
-  overflow: auto;
-  padding-top: 10px;
-  border-top: 1px solid #edf2ef;
-  scrollbar-width: thin;
-}
-
-.role-picker {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.returning-user-card,
 .role-picker button,
 .role-switcher button,
 .current-role {
@@ -159,30 +145,6 @@ h3 {
   font-weight: 850;
 }
 
-.returning-user-card {
-  display: grid;
-  align-content: center;
-  justify-items: start;
-  gap: 1px;
-  min-height: 50px;
-  padding: 9px 11px;
-  background: #f7fbf9;
-  text-align: left;
-}
-
-.returning-user-card span {
-  color: #132a21;
-  font-size: 0.98rem;
-  font-weight: 900;
-}
-
-.returning-user-card strong {
-  color: #237a5c;
-  font-size: 0.88rem;
-  font-weight: 850;
-}
-
-.returning-user-card:hover,
 .role-picker button:hover,
 .role-picker button.selected {
   border-color: #237a5c;
@@ -191,6 +153,26 @@ h3 {
   box-shadow: 0 8px 18px rgba(35, 122, 92, 0.12);
 }
 
+.remember-password {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d7e2dc;
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: #f8fbf9;
+  color: #20392f;
+  font-size: 0.95rem;
+  font-weight: 850;
+}
+
+.remember-password input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  accent-color: #237a5c;
+}
 .login-card form {
   display: grid;
   gap: 10px;
@@ -840,11 +822,6 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .remembered-logins {
-    grid-template-columns: 1fr;
-  }
-
-  .returning-user-card,
   .role-picker button {
     min-height: 38px;
   }
