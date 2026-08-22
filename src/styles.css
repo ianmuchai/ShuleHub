@@ -1013,3 +1013,146 @@ select {
     min-height: 138px;
   }
 }
+/* Operational surfaces */
+.login-signals,
+.club-summary,
+.ops-grid,
+.admin-action-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.login-signals {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 10px 0 12px;
+}
+
+.login-signals span {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #f8fff9;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.ops-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.ops-grid,
+.admin-action-grid,
+.club-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ops-grid article,
+.club-summary article,
+.ops-form {
+  min-width: 0;
+  border: 1px solid #dfe7db;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 13px;
+}
+
+.ops-grid span,
+.club-summary span,
+.ops-form h4 {
+  color: #5b6d61;
+  font-size: 0.92rem;
+  font-weight: 900;
+  margin: 0;
+}
+
+.ops-grid strong,
+.club-summary strong {
+  display: block;
+  margin-top: 5px;
+  color: #10281c;
+  font-size: 1.03rem;
+  line-height: 1.25;
+}
+
+.ops-grid p,
+.club-summary p,
+.muted-note {
+  margin: 6px 0 0;
+  color: #405349;
+  font-size: 0.96rem;
+}
+
+.ops-grid small,
+.club-summary small {
+  display: block;
+  margin-top: 8px;
+  color: #647468;
+  font-weight: 800;
+}
+
+.ops-panel label,
+.ops-form label {
+  display: grid;
+  gap: 6px;
+  color: #263b31;
+  font-weight: 850;
+}
+
+.ops-panel textarea,
+.ops-panel input,
+.ops-form input,
+.ops-form select {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid #cfdcd4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #10281c;
+}
+
+.ops-panel textarea {
+  min-height: 104px;
+  resize: vertical;
+}
+
+.inline-action {
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 10px 13px;
+  background: #173d31;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.inline-action:hover {
+  background: #245d49;
+}
+
+.scroll-highlight {
+  animation: taskPulse 1100ms ease-out 1;
+  box-shadow: 0 0 0 3px rgba(216, 169, 58, 0.34), 0 14px 34px rgba(21, 41, 31, 0.12);
+}
+
+@keyframes taskPulse {
+  0% {
+    background: #fff4c7;
+  }
+  100% {
+    background: #ffffff;
+  }
+}
+
+@media (max-width: 760px) {
+  .login-signals,
+  .ops-grid,
+  .admin-action-grid,
+  .club-summary {
+    grid-template-columns: 1fr;
+  }
+}

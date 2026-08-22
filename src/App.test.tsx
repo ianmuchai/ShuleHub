@@ -281,7 +281,9 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Verify staff identity" }));
     expect(screen.getByLabelText("Evidence required")).toHaveValue("Staff payroll number PAY-0142, national ID ending 4482, school email admin@demo.school, and signed HR appointment letter HR-2026-014");
-  });  test("workflow review steps are clickable task prompts with relevant step pages", () => {
+  });
+
+  test("workflow review steps are clickable task prompts with relevant step pages", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
@@ -346,5 +348,113 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+  });
+
+  test("parent teacher messages support chat and media uploads", () => {
+    render(<App initialDashboard={dashboard("Parent")} />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Messages" })[0]);
+
+    expect(screen.getByRole("heading", { name: "Parent Teacher Messages" })).toBeTruthy();
+    expect(screen.getByLabelText("Message to teacher")).toBeTruthy();
+    expect(screen.getByLabelText("Upload photo or video evidence")).toHaveAttribute("type", "file");
+    fireEvent.click(screen.getByRole("button", { name: "Send message to class teacher" }));
+    expect(screen.getByText("Message queued for David Class Teacher with media review enabled")).toBeTruthy();
+  });
+
+  test("teacher timetable upload autopicks classes and creates reminders and assignment alerts", () => {
+    render(<App initialDashboard={dashboard("Teacher")} />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Timetable" })[0]);
+
+    expect(screen.getByRole("heading", { name: "Timetable & Class Reminders" })).toBeTruthy();
+    expect(screen.getByLabelText("Upload timetable file")).toHaveAttribute("type", "file");
+    expect(screen.getByText("Auto-picked classes: Grade 4 East Mathematics, Grade 4 East Science")).toBeTruthy();
+    expect(screen.getByText("Class reminder: Grade 4 East Mathematics at 08:00")).toBeTruthy();
+    expect(screen.getByText("Assignment alert queued for parents and students")).toBeTruthy();
+  });
+
+  test("student profile shows clubs games and limited student access", () => {
+    render(<App initialDashboard={dashboard("Learner")} />);
+
+    expect(screen.getByText("Creative Coding Club")).toBeTruthy();
+    expect(screen.getByText("Members: Nia Wanjiku, Amani Otieno, Wairimu Njoroge")).toBeTruthy();
+    expect(screen.getByText("Games: Football - under 11 goalkeeper"));
+    expect(screen.queryByText("User Access Control")).toBeNull();
+    expect(screen.queryByText("Create user account")).toBeNull();
+  });
+
+  test("resources include books past papers and revision material with clickable workflows", () => {
+    render(<App initialDashboard={dashboard("Learner")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Study" }));
+
+    expect(screen.getByText("Books")).toBeTruthy();
+    expect(screen.getByText("Past papers")).toBeTruthy();
+    expect(screen.getByText("Revision material")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Open Grade 4 Revision Pack" }));
+    expect(screen.getByRole("heading", { name: "Grade 4 Revision Pack" })).toBeTruthy();
+  });
+
+  test("admin manage users supports creating a new user and biometric registration", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    expect(screen.getByRole("heading", { name: "Admin Control Center" })).toBeTruthy();
+    expect(screen.getByLabelText("New user full name")).toBeTruthy();
+    expect(screen.getByLabelText("New user role")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Create user account" }));
+    expect(screen.getByText("User creation request ready for maker-checker approval")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Biometrics" }));
+    expect(screen.getByRole("heading", { name: "Biometric Registration & Identification" })).toBeTruthy();
+    expect(screen.getByLabelText("Admission or staff number")).toBeTruthy();
+    expect(screen.getByLabelText("Capture fingerprint template")).toHaveAttribute("type", "file");
+    expect(screen.getByLabelText("Capture face photo")).toHaveAttribute("type", "file");
+    fireEvent.click(screen.getByRole("button", { name: "Register biometric identity" }));
+    expect(screen.getByText("Biometric identity queued for consent and duplicate check")).toBeTruthy();
+  });
+
+  test("finance arrears exposes a dispute workflow", () => {
+    render(<App initialDashboard={dashboard("Finance Officer")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Arrears aging" }));
+    expect(screen.getByRole("heading", { name: "Arrears aging" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Raise arrears dispute" }));
+    expect(screen.getByText("Arrears dispute case opened for bursar review")).toBeTruthy();
+  });
+
+  test("class teacher and subject teacher roles have separate workspaces", () => {
+    const loginRender = render(<App />);
+
+    expect(screen.getByRole("button", { name: "Class Teacher" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Subject Teacher" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Class Teacher" }));
+    expect(screen.getByLabelText("Email")).toHaveValue("class.teacher@demo.school");
+
+    fireEvent.click(screen.getByRole("button", { name: "Subject Teacher" }));
+    expect(screen.getByLabelText("Email")).toHaveValue("subject.teacher@demo.school");
+    loginRender.unmount();
+
+    const { rerender } = render(<App initialDashboard={dashboard("Class Teacher")} />);
+    expect(screen.getByRole("heading", { level: 1, name: "Class Teacher Workspace" })).toBeTruthy();
+    expect(screen.getByText("Pastoral overview")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Messages" }).length).toBeGreaterThan(0);
+
+    rerender(<App initialDashboard={dashboard("Subject Teacher")} />);
+    expect(screen.getByRole("heading", { level: 1, name: "Subject Teacher Workspace" })).toBeTruthy();
+    expect(screen.getByText("Subject classes: Grade 4 East Mathematics, Grade 5 West Science")).toBeTruthy();
+    expect(screen.queryByText("Pastoral overview")).toBeNull();
+  });
+
+  test("autoscrolled task sections receive a visible highlight", () => {
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });
+    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: vi.fn() });
+    const { container } = render(<App initialDashboard={dashboard("Parent")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review balance movement" }));
+
+    expect(container.querySelector(".task-section.scroll-highlight")).toBeTruthy();
   });
 });
