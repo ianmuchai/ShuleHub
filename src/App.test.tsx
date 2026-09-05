@@ -425,17 +425,15 @@ describe("App", () => {
     expect(screen.getByText("Arrears dispute case opened for bursar review")).toBeTruthy();
   });
 
-  test("class teacher and subject teacher roles have separate workspaces", () => {
+  test("class teacher remains separate while teacher owns subject duties", () => {
     const loginRender = render(<App />);
 
     expect(screen.getByRole("button", { name: "Class Teacher" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Subject Teacher" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Subject Teacher" })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Class Teacher" }));
-    expect(screen.getByLabelText("Email")).toHaveValue("class.teacher@demo.school");
-
-    fireEvent.click(screen.getByRole("button", { name: "Subject Teacher" }));
-    expect(screen.getByLabelText("Email")).toHaveValue("subject.teacher@demo.school");
+    fireEvent.click(screen.getByRole("button", { name: "Teacher" }));
+    expect(screen.getByLabelText("Email")).toHaveValue("teacher@demo.school");
+    expect(screen.getByLabelText("Password")).toHaveValue("TeacherPass123!");
     loginRender.unmount();
 
     const { rerender } = render(<App initialDashboard={dashboard("Class Teacher")} />);
@@ -443,10 +441,10 @@ describe("App", () => {
     expect(screen.getByText("Pastoral overview")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Messages" }).length).toBeGreaterThan(0);
 
-    rerender(<App initialDashboard={dashboard("Subject Teacher")} />);
-    expect(screen.getByRole("heading", { level: 1, name: "Subject Teacher Workspace" })).toBeTruthy();
+    rerender(<App initialDashboard={dashboard("Teacher")} />);
+    expect(screen.getByRole("heading", { level: 1, name: "Teacher Workspace" })).toBeTruthy();
     expect(screen.getByText("Subject classes: Grade 4 East Mathematics, Grade 5 West Science")).toBeTruthy();
-    expect(screen.queryByText("Pastoral overview")).toBeNull();
+    expect(screen.getByRole("button", { name: "Publish revision material" })).toBeTruthy();
   });
 
   test("autoscrolled task sections receive a visible highlight", () => {
