@@ -222,14 +222,58 @@ describe("App", () => {
     expect(screen.getByText("LIB-ENG-042")).toBeTruthy();
   });
 
-  test("table row buttons open a clear workflow detail panel", () => {
+  test("table row buttons open concrete teacher task pages", () => {
     render(<App initialDashboard={dashboard("Teacher")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Daily register/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Daily register" }));
 
-    expect(screen.getByRole("heading", { name: "Daily register" })).toBeTruthy();
-    expect(screen.getByText(/Marked present, absent, late, and follow-up notes/i)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Open attendance register" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Grade 4 East Register" })).toBeTruthy();
+    expect(screen.getByText("Tuesday 08:00 Mathematics")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save register and notify office" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Communication Center" })).toBeNull();
+  });
+
+  test("teacher daily register opens a complete attendance page", () => {
+    render(<App initialDashboard={dashboard("Teacher")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Daily register" }));
+
+    expect(screen.getByRole("heading", { name: "Grade 4 East Register" })).toBeTruthy();
+    expect(screen.getByText("Tuesday 08:00 Mathematics"));
+    expect(screen.getByRole("button", { name: "Mark Nia Wanjiku present" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Mark Amani Otieno absent" })).toBeTruthy();
+    expect(screen.getByLabelText("Register note for office"));
+    expect(screen.queryByRole("button", { name: "Save Daily register update" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Download blank register" }));
+    expect(screen.getByText("Register download prepared for Grade 4 East"));
+    fireEvent.click(screen.getByRole("button", { name: "Mark Amani Otieno absent" }));
+    expect(screen.getByText("Amani Otieno marked Absent"));
+    fireEvent.click(screen.getByRole("button", { name: "Save register and notify office" }));
+    expect(screen.getByText("Register saved for Grade 4 East with parent alerts queued for absences"));
+  });
+
+  test("teacher homework issue opens a complete homework management page", () => {
+    render(<App initialDashboard={dashboard("Teacher")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Class Register" }));
+    fireEvent.click(screen.getByRole("button", { name: "Homework issue" }));
+
+    expect(screen.getByRole("heading", { name: "Homework Studio" })).toBeTruthy();
+    expect(screen.getByLabelText("Homework title")).toHaveValue("Grade 4 fractions practice");
+    expect(screen.getByLabelText("Due date")).toHaveValue("2026-08-23");
+    expect(screen.getByLabelText("Attach worksheet or media")).toHaveAttribute("type", "file");
+    expect(screen.getByRole("button", { name: "Download Nia Wanjiku submission" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Mark Amani Otieno not completed" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Save Homework issue update" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Communication Center" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Download Nia Wanjiku submission" }));
+    expect(screen.getByText("Nia Wanjiku submission download prepared"));
+    fireEvent.click(screen.getByRole("button", { name: "Mark Amani Otieno completed" }));
+    expect(screen.getByText("Amani Otieno marked completed"));
+    fireEvent.click(screen.getByRole("button", { name: "Publish homework to learners and parents" }));
+    expect(screen.getByText("Homework published with completion tracking and parent alerts"));
   });
   test("landing page does not render returning-user history cards", () => {
     localStorage.setItem("shulehub.loginHistory", JSON.stringify([{ email: "grace@school.test", name: "Grace", lastRole: "Parent", roles: ["Teacher", "Parent"], lastLoginAt: "2026-08-19T10:00:00.000Z" }]));

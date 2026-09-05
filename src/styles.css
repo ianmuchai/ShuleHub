@@ -990,6 +990,134 @@ select {
     min-height: 138px;
   }
 }
+/* Teacher task pages */
+.teacher-task-page {
+  display: grid;
+  gap: 14px;
+  border-top: 4px solid #225f78;
+}
+
+.task-focus-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.task-focus-grid .teacher-task-page {
+  max-width: 1120px;
+}
+
+.teacher-task-page header {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.teacher-task-page header div {
+  display: grid;
+  gap: 4px;
+}
+
+.teacher-task-page header span {
+  color: #5a6a61;
+  font-size: 0.95rem;
+  font-weight: 850;
+}
+
+.teacher-toolbar,
+.compact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.teacher-toolbar button,
+.compact-actions button {
+  min-height: 36px;
+  border: 1px solid #cbdcd6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: #18352c;
+  font-size: 0.9rem;
+  font-weight: 850;
+  box-shadow: none;
+}
+
+.teacher-toolbar button:hover,
+.compact-actions button:hover {
+  border-color: #225f78;
+  background: #eef8fb;
+  color: #12313e;
+}
+
+.register-grid,
+.submission-board {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-register-row,
+.submission-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(90px, auto) minmax(260px, auto);
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #dde8e3;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfdfc;
+}
+
+.submission-row {
+  grid-template-columns: minmax(190px, 1fr) minmax(260px, auto);
+}
+
+.learner-register-row strong,
+.submission-row strong {
+  display: block;
+  color: #10261d;
+  font-size: 1rem;
+}
+
+.learner-register-row span,
+.submission-row span,
+.learner-register-row small {
+  color: #60736a;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.homework-studio {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.homework-studio .wide-field,
+.teacher-note {
+  grid-column: 1 / -1;
+}
+
+.homework-studio textarea,
+.teacher-note textarea {
+  min-height: 96px;
+  border: 1px solid #cfdcd4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+@media (max-width: 760px) {
+  .learner-register-row,
+  .submission-row,
+  .homework-studio {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-actions button,
+  .teacher-toolbar button {
+    flex: 1 1 120px;
+  }
+}
 /* Operational surfaces */
 .login-signals,
 .club-summary,
