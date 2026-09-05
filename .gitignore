@@ -6,3 +6,4 @@ dist/
 backend/**/*.js
 backend/**/*.d.ts
 backend/**/*.js.map
+.tmp/

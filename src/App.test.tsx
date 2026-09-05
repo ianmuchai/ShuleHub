@@ -284,6 +284,44 @@ describe("App", () => {
     expect(screen.queryByText("Grace")).toBeNull();
     expect(screen.getByLabelText("Remember password")).not.toBeChecked();
   });
+  test("visible task buttons open full page workspaces instead of side panels", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
+
+    expect(screen.getByRole("heading", { name: "User Access Control" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    expect(screen.getByRole("button", { name: "Submit scoped access approval" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Communication Center" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Operations Queue" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Admin" }));
+    expect(screen.getByRole("heading", { name: "Admin Control Center" })).toBeTruthy();
+  });
+
+  test("finance admissions and resource buttons open concrete reports and forms", () => {
+    const { rerender } = render(<App initialDashboard={dashboard("Finance Officer")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Statement Exports" }));
+    expect(screen.getByRole("heading", { name: "Statement Export Center" })).toBeTruthy();
+    expect(screen.getByLabelText("Statement format")).toHaveValue("Signed PDF + Excel ledger export");
+    fireEvent.click(screen.getByRole("button", { name: "Download statement PDF" }));
+    expect(screen.getByText("Statement PDF prepared for guardian delivery"));
+
+    rerender(<App initialDashboard={dashboard("Admissions Officer")} />);
+    fireEvent.click(screen.getByRole("button", { name: "Offer Letters" }));
+    expect(screen.getByRole("heading", { name: "Admissions Case Workspace" })).toBeTruthy();
+    expect(screen.getByLabelText("Applicant file")).toHaveValue("APP-2026-118 - Brian Otieno - Grade 4 intake");
+    fireEvent.click(screen.getByRole("button", { name: "Preview offer letter" }));
+    expect(screen.getByText("Offer letter preview opened for APP-2026-118"));
+
+    rerender(<App initialDashboard={dashboard("Teacher")} />);
+    fireEvent.click(screen.getByRole("button", { name: "Publish revision material" }));
+    expect(screen.getByRole("heading", { name: "Learning Resource Library" })).toBeTruthy();
+    expect(screen.getByText("Grade 4 Revision Pack")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Download resource pack" }));
+    expect(screen.getByText("Resource pack download prepared"));
+  });
   test("dashboard actions open tabbed task pages that can be completed", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
 

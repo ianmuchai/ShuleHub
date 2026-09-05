@@ -1001,8 +1001,83 @@ select {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.task-focus-grid .teacher-task-page {
+.task-focus-grid .teacher-task-page,
+.task-focus-grid .specialist-page,
+.task-focus-grid .focused-workspace {
   max-width: 1120px;
+  width: 100%;
+}
+
+.focused-workspace {
+  display: grid;
+  gap: 14px;
+}
+
+.task-action-card {
+  border-top: 4px solid #6c7a33;
+}
+
+.task-action-card header h4 {
+  margin: 0;
+  color: #10261d;
+  font-size: 1rem;
+}
+
+.specialist-page {
+  display: grid;
+  gap: 14px;
+  border-top: 4px solid #225f78;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfc 100%);
+}
+
+.specialist-page header {
+  align-items: flex-start;
+}
+
+.specialist-page header div {
+  display: grid;
+  gap: 4px;
+}
+
+.specialist-page header span,
+.report-preview span {
+  color: #5a6a61;
+  font-size: 0.9rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.specialist-page header p,
+.report-preview p {
+  margin: 0;
+  color: #46584f;
+  line-height: 1.45;
+}
+
+.specialist-grid,
+.report-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.specialist-grid label,
+.report-preview article {
+  min-width: 0;
+  border: 1px solid #dde8e3;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.report-preview article {
+  display: grid;
+  gap: 6px;
+}
+
+.report-preview strong {
+  color: #10261d;
+  font-size: 1.08rem;
 }
 
 .teacher-task-page header {
@@ -1107,6 +1182,8 @@ select {
 }
 
 @media (max-width: 760px) {
+  .specialist-grid,
+  .report-preview,
   .learner-register-row,
   .submission-row,
   .homework-studio {

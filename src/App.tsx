@@ -380,6 +380,41 @@ function TeacherTaskPage({ selected }: { selected?: string }) {
   if (selected === "Homework issue") return <HomeworkStudioPage />;
   return <DailyRegisterPage />;
 }
+
+function StatementExportCenter() {
+  const [status, setStatus] = useState("");
+  return <section className="module wide specialist-page"><header><ReceiptText size={20} /><div><span>Finance report</span><h3>Statement Export Center</h3><p>Prepare parent statements, class balances, and bursar review exports from the same controlled ledger view.</p></div></header><div className="specialist-grid"><label><span>Statement format</span><input aria-label="Statement format" defaultValue="Signed PDF + Excel ledger export" /></label><label><span>Recipient group</span><input aria-label="Recipient group" defaultValue="Grade 4 East guardians and bursar archive" /></label><label><span>Date range</span><input aria-label="Date range" defaultValue="01 May 2026 to 20 Aug 2026" /></label><label><span>Approval evidence</span><input aria-label="Approval evidence" defaultValue="Bursar review FIN-EXP-0820, masked learner accounts, checksum manifest required" /></label></div><div className="report-preview"><article><span>Statements</span><strong>31 family statements</strong><p>Fee invoices, receipts, discounts, meals, transport, and arrears dispute flags.</p></article><article><span>Controls</span><strong>Checksum and audit manifest</strong><p>Every export is recorded with requester, role, date range, and delivery route.</p></article></div><div className="teacher-toolbar"><button type="button" onClick={() => setStatus("Statement PDF prepared for guardian delivery")}>Download statement PDF</button><button type="button" onClick={() => setStatus("Excel ledger export prepared for bursar review")}>Download Excel ledger</button><button type="button" onClick={() => setStatus("Guardian statement notices queued")}>Queue guardian notices</button></div>{status && <strong className="task-status">{status}</strong>}</section>;
+}
+
+function AdmissionsCaseWorkspace() {
+  const [status, setStatus] = useState("");
+  return <section className="module wide specialist-page"><header><FileText size={20} /><div><span>Admissions form</span><h3>Admissions Case Workspace</h3><p>Review the applicant file, required documents, interview outcome, offer letter, and guardian onboarding in one place.</p></div></header><div className="specialist-grid"><label><span>Applicant file</span><input aria-label="Applicant file" defaultValue="APP-2026-118 - Brian Otieno - Grade 4 intake" /></label><label><span>Document status</span><input aria-label="Document status" defaultValue="Birth certificate, previous report, guardian ID, medical declaration received" /></label><label><span>Interview panel</span><input aria-label="Interview panel" defaultValue="Admissions officer, Grade 4 lead, bursar deposit check" /></label><label><span>Admission number reservation</span><input aria-label="Admission number reservation" defaultValue="Reserve ADM-2026-118 after offer approval" /></label></div><div className="teacher-toolbar"><button type="button" onClick={() => setStatus("Offer letter preview opened for APP-2026-118")}>Preview offer letter</button><button type="button" onClick={() => setStatus("Admission number ADM-2026-118 reserved for checker approval")}>Reserve admission number</button><button type="button" onClick={() => setStatus("Guardian onboarding checklist sent")}>Send onboarding checklist</button></div>{status && <strong className="task-status">{status}</strong>}</section>;
+}
+
+function LearningResourceLibrary({ item }: { item: WorkflowDetailItem }) {
+  const [status, setStatus] = useState("");
+  return <section className="module wide specialist-page"><header><BookMarked size={20} /><div><span>Learning resources</span><h3>Learning Resource Library</h3><p>{item.title} is opened with materials, visibility, download controls, and parent/student access settings.</p></div></header><div className="report-preview"><article><span>Resource</span><h4>{item.title}</h4><p>Books, past papers, revision material, marking schemes, and teacher support notes are grouped by class stream.</p></article><article><span>Visibility</span><strong>Grade 4 East learners, guardians, and assigned teachers</strong><p>Students get study access; teachers can publish updates; parents can view assigned resources.</p></article></div><div className="specialist-grid"><label><span>Resource category</span><input aria-label="Resource category" defaultValue={item.title.includes("Past") ? "Past papers and marking schemes" : item.title.includes("Reading") || item.title.includes("Books") ? "Books and class readers" : "Revision pack and learning notes"} /></label><label><span>Release controls</span><input aria-label="Release controls" defaultValue="Visible after teacher approval, parent notification enabled" /></label></div><div className="teacher-toolbar"><button type="button" onClick={() => setStatus("Resource pack download prepared")}>Download resource pack</button><button type="button" onClick={() => setStatus("Resource published to learners and parents")}>Publish to learners and parents</button><button type="button" onClick={() => setStatus("Teacher marking guide opened")}>Open marking guide</button></div>{status && <strong className="task-status">{status}</strong>}</section>;
+}
+
+function LibraryLoanWorkspace({ item }: { item: WorkflowDetailItem }) {
+  const [status, setStatus] = useState("");
+  return <section className="module wide specialist-page"><header><Library size={20} /><div><span>Library record</span><h3>Library Loan Record</h3><p>{item.title} opens the learner borrowing account with renewals, returns, due dates, and guardian notices.</p></div></header><div className="submission-board">{loans.map((loan) => <article className="submission-row" key={loan.barcode}><div><strong>{loan.title}</strong><span>{loan.barcode} - Due {loan.due}</span></div><div className="compact-actions"><button type="button" aria-label={`Renew ${loan.title}`} onClick={() => setStatus(`${loan.title} renewal queued`)}>Renew</button><button type="button" aria-label={`Mark ${loan.title} returned`} onClick={() => setStatus(`${loan.title} marked ready for return inspection`)}>Returned</button><button type="button" aria-label={`Download ${loan.title} loan slip`} onClick={() => setStatus(`${loan.title} loan slip prepared`)}>Slip</button></div></article>)}</div>{status && <strong className="task-status">{status}</strong>}</section>;
+}
+
+function ArrearsDisputeWorkspace() {
+  const [status, setStatus] = useState("");
+  return <section className="module wide specialist-page"><header><Banknote size={20} /><div><span>Finance dispute</span><h3>Arrears aging</h3><p>Review overdue invoices, guardian promises, disputed charges, reminder history, and bursar approval notes.</p></div></header><div className="specialist-grid"><label><span>Learner account</span><input aria-label="Learner account" defaultValue="Nia Wanjiku ADM-2026-000 - invoice INV-2026-041" /></label><label><span>Disputed item</span><input aria-label="Disputed item" defaultValue="Transport charge KES 5,000 pending bursar review" /></label><label><span>Guardian explanation</span><input aria-label="Guardian explanation" defaultValue="Receipt MPESA-QK82L19 submitted; allocation under review" /></label><label><span>Evidence bundle</span><input aria-label="Evidence bundle" defaultValue="Invoice, receipt, message thread, and ledger movement attached" /></label></div><button type="button" className="inline-action" onClick={() => setStatus("Arrears dispute case opened for bursar review")}>Raise arrears dispute</button>{status && <strong className="task-status">{status}</strong>}</section>;
+}
+
+function FocusedWorkflowPage({ dashboard, item }: { dashboard: Dashboard; item: WorkflowDetailItem }) {
+  if (isTeacherTaskWorkflow(dashboard.role, item.title)) return <TeacherTaskPage selected={item.title} />;
+  if (item.title === "Statement exports") return <StatementExportCenter />;
+  if (item.title === "Arrears aging") return <ArrearsDisputeWorkspace />;
+  if (item.title.includes("Application") || item.title.includes("Offer") || item.title.includes("Guardian onboarding") || item.title.includes("Admission")) return <AdmissionsCaseWorkspace />;
+  if (item.title.includes("Resource") || item.title.includes("Revision") || item.title.includes("Past Papers") || item.title.includes("Books") || resources.some((resource) => resource.title === item.title)) return <LearningResourceLibrary item={item} />;
+  if (item.title.includes("Library") || item.title.includes("Borrowed") || item.title.includes("River") || item.title.includes("Atlas") || item.title.includes("Kiswahili")) return <LibraryLoanWorkspace item={item} />;
+  return <div className="focused-workspace"><WorkflowDetailPanel item={item} /></div>;
+}
 function TimetableWorkspace({ dashboard }: { dashboard: Dashboard }) {
   const canUpload = ["Teacher", "Class Teacher", "Super Admin", "School Admin"].includes(dashboard.role);
   return <section className="module wide ops-panel"><header><CalendarCheck size={20} /><h3>Timetable & Class Reminders</h3></header><div className="ops-grid"><article><span>Auto-picked classes</span><strong>Auto-picked classes: Grade 4 East Mathematics, Grade 4 East Science</strong><p>Teacher: David Class Teacher. Source: uploaded timetable sheet row TUE-0800 and WED-1030.</p></article><article><span>Reminder</span><strong>Class reminder: Grade 4 East Mathematics at 08:00</strong><p>Reminder appears for teacher, learner, and guardian portals before the lesson starts.</p></article><article><span>Assignments</span><strong>Assignment alert queued for parents and students</strong><p>MAT-G4-0820 due 23 Aug 2026 with parent visibility and learner notification.</p></article></div>{canUpload ? <label><span>Upload timetable file</span><input aria-label="Upload timetable file" type="file" accept=".csv,.xlsx,.xls,.pdf" /></label> : <p className="muted-note">Grade 4 East timetable is visible here; upload access is restricted to teachers and administrators.</p>}</section>;
@@ -442,14 +477,18 @@ function Workspace({ dashboard, active, onOpen, selected }: { dashboard: Dashboa
 function DashboardView({ dashboard, onRoleChange, onSignOut }: { dashboard: Dashboard; onRoleChange: (role: string) => void; onSignOut: () => void }) {
   const [active, setActive] = useState<WorkspaceKey>(defaultWorkspace(dashboard.role));
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowDetailItem>(() => workflowDetail(defaultWorkflowForRole(dashboard.role)));
+  const [focusedWorkflow, setFocusedWorkflow] = useState(false);
   const nav = useMemo(() => navForRole(dashboard.role), [dashboard.role]);
   const actions = useMemo(() => actionsForRole(dashboard.role), [dashboard.role]);
   const assignableRoles = dashboard.user.roles?.length ? dashboard.user.roles : [dashboard.role];
   const workflowRef = useRef<HTMLDivElement | null>(null);
+  const workspaceOnlyActions = new Set(["Messages", "Timetable", "Student Portal"]);
+  const workspacePanelActions = new Set(["M-Pesa Exceptions", "Fee Statement", "Library Loans"]);
 
   useEffect(() => {
     setActive(defaultWorkspace(dashboard.role));
     setSelectedWorkflow(workflowDetail(defaultWorkflowForRole(dashboard.role)));
+    setFocusedWorkflow(false);
   }, [dashboard.role]);
 
   const scrollToWorkflow = () => {
@@ -458,17 +497,29 @@ function DashboardView({ dashboard, onRoleChange, onSignOut }: { dashboard: Dash
 
   const openWorkflow = (workflow: string) => {
     setSelectedWorkflow(workflowDetail(workflowForAction(workflow)));
+    setFocusedWorkflow(true);
     scrollToWorkflow();
   };
 
   const openArea = (key: WorkspaceKey, workflow?: string) => {
     setActive(key);
-    openWorkflow(workflow ?? key);
+    if (workflow) {
+      openWorkflow(workflow);
+      return;
+    }
+    setFocusedWorkflow(false);
+    setSelectedWorkflow(workflowDetail(defaultWorkflowForRole(dashboard.role)));
+    scrollToWorkflow();
   };
 
-  const focusedTeacherTask = isTeacherTaskWorkflow(dashboard.role, selectedWorkflow.title);
+  const openWorkspaceWithPanel = (key: WorkspaceKey, workflow: string) => {
+    setActive(key);
+    setSelectedWorkflow(workflowDetail(workflow));
+    setFocusedWorkflow(false);
+    scrollToWorkflow();
+  };
 
-  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => openArea(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="session-tools"><div className="trust"><ShieldCheck size={18} />Role-secured session</div>{assignableRoles.length > 1 && <div className="role-switcher" aria-label="Switch active role">{assignableRoles.map((role) => role === dashboard.role ? <span className="current-role" key={role}>{roleDisplay(role)}</span> : <button type="button" key={role} onClick={() => onRoleChange(role)}>Switch to {roleDisplay(role)}</button>)}</div>}<button className="sign-out" type="button" onClick={onSignOut}><LogOut size={18} />Sign out</button></div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => openArea(action.key, workflowForAction(action.label))}>{action.label}</button>)}</section><section className={focusedTeacherTask ? "work-grid task-focus-grid" : "work-grid"}><Workspace dashboard={dashboard} active={active} onOpen={openWorkflow} selected={selectedWorkflow.title} />{!focusedTeacherTask && <><div className="workflow-anchor" ref={workflowRef}><WorkflowDetailPanel item={selectedWorkflow} /></div><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} onOpen={openWorkflow} selected={selectedWorkflow.title} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} onOpen={openWorkflow} selected={selectedWorkflow.title} />}</>}</section></section></main>;
+  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => openArea(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="session-tools"><div className="trust"><ShieldCheck size={18} />Role-secured session</div>{assignableRoles.length > 1 && <div className="role-switcher" aria-label="Switch active role">{assignableRoles.map((role) => role === dashboard.role ? <span className="current-role" key={role}>{roleDisplay(role)}</span> : <button type="button" key={role} onClick={() => onRoleChange(role)}>Switch to {roleDisplay(role)}</button>)}</div>}<button className="sign-out" type="button" onClick={onSignOut}><LogOut size={18} />Sign out</button></div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => workspaceOnlyActions.has(action.label) ? openArea(action.key) : workspacePanelActions.has(action.label) ? openWorkspaceWithPanel(action.key, workflowForAction(action.label)) : openArea(action.key, workflowForAction(action.label))}>{action.label}</button>)}</section><section className={focusedWorkflow ? "work-grid task-focus-grid" : "work-grid"} ref={workflowRef}>{focusedWorkflow ? <FocusedWorkflowPage dashboard={dashboard} item={selectedWorkflow} /> : <><Workspace dashboard={dashboard} active={active} onOpen={openWorkflow} selected={selectedWorkflow.title} /><div className="workflow-anchor"><WorkflowDetailPanel item={selectedWorkflow} /></div><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} onOpen={openWorkflow} selected={selectedWorkflow.title} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} onOpen={openWorkflow} selected={selectedWorkflow.title} />}</>}</section></section></main>;
 }
 export default function App({ initialDashboard }: AppProps) {
   const [email, setEmail] = useState("");
