@@ -587,4 +587,34 @@ describe("App", () => {
     expect(screen.getByText("Manage bus routes, pickup points, vehicle compliance files, learner assignments, and transport billing checks.")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Confirm route roster" }).length).toBeGreaterThan(0);
   });
+  test("teachers can open an assignment upload workspace with a real upload control", () => {
+    render(<App initialDashboard={dashboard("Teacher")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Upload assignment" }));
+
+    expect(screen.getByRole("heading", { name: "Assignment Upload Center" })).toBeTruthy();
+    expect(screen.getByLabelText("Assignment title")).toHaveValue("Grade 4 Mathematics fractions assignment");
+    expect(screen.getByLabelText("Upload assignment file")).toHaveAttribute("type", "file");
+    expect(screen.getByLabelText("Due date")).toHaveValue("2026-08-23");
+    expect(screen.getByLabelText("Visible to")).toHaveValue("Grade 4 East students and linked parents");
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish assignment to students and parents" }));
+    expect(screen.getByText("Assignment uploaded, published, and parent/student alerts queued")).toBeTruthy();
+  });
+
+  test("teachers can upload learning resources from the resource page", () => {
+    render(<App initialDashboard={dashboard("Teacher")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Learning Resources" }));
+    fireEvent.click(screen.getByRole("button", { name: "Upload new resource" }));
+
+    expect(screen.getByRole("heading", { name: "Resource Upload Center" })).toBeTruthy();
+    expect(screen.getByLabelText("Resource title")).toHaveValue("Grade 4 revision video and notes");
+    expect(screen.getByLabelText("Upload resource file")).toHaveAttribute("type", "file");
+    expect(screen.getByLabelText("Resource category")).toHaveValue("Revision material");
+    expect(screen.getByLabelText("Visibility scope")).toHaveValue("Grade 4 East learners, linked parents, and assigned teachers");
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish resource to library" }));
+    expect(screen.getByText("Resource uploaded to the learning library with access controls applied")).toBeTruthy();
+  });
 });
