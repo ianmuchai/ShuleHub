@@ -128,7 +128,7 @@ describe("App", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Finance Officer")} />);
     expect(screen.getByRole("heading", { name: "Bursar Workbench" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /M-Pesa Exceptions/i }));
-    expect(screen.getByRole("heading", { name: "Reconciliation Queue" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Payment Reconciliation" })).toBeTruthy();
 
     rerender(<App initialDashboard={dashboard("Teacher")} />);
     expect(screen.getByRole("heading", { name: "Teacher Workspace" })).toBeTruthy();
@@ -139,7 +139,7 @@ describe("App", () => {
   test("student and admissions experiences are specific to their workflows", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Learner")} />);
     expect(screen.getByRole("heading", { level: 1, name: "Student Portal" })).toBeTruthy();
-    expect(screen.getByText("Assignments"));
+    expect(screen.getByRole("button", { name: "Open assignments" })).toBeTruthy();
 
     rerender(<App initialDashboard={dashboard("Admissions Officer")} />);
     expect(screen.getByRole("heading", { name: "Admissions Desk" })).toBeTruthy();
@@ -169,18 +169,18 @@ describe("App", () => {
   });
   test("student portal is available only to relevant learner, guardian, teacher, and admin roles", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Parent")} />);
-    expect(screen.getByRole("button", { name: "Student Portal" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Student Portal" }));
+    expect(screen.getByRole("button", { name: "Student Profile" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Student Profile" }));
     expect(screen.getByText("Guardian view")).toBeTruthy();
 
     rerender(<App initialDashboard={dashboard("Teacher")} />);
-    expect(screen.getByRole("button", { name: "Student Portal" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Student Portal" }));
+    expect(screen.getByRole("button", { name: "Learner Profiles" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Learner Profiles" }));
     expect(screen.getByText("Teacher view")).toBeTruthy();
 
     rerender(<App initialDashboard={dashboard("Super Admin")} />);
-    expect(screen.getByRole("button", { name: "Student Portal" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Student Portal" }));
+    expect(screen.getByRole("button", { name: "Learner Portal Access" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Learner Portal Access" }));
     expect(screen.getByText("Administrator view")).toBeTruthy();
 
     rerender(<App initialDashboard={dashboard("Finance Officer")} />);
@@ -213,7 +213,7 @@ describe("App", () => {
   test("workflow buttons open focused panels with role-specific data", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
     expect(screen.getByRole("heading", { name: "Fee Statement & Payments" })).toBeTruthy();
     expect(screen.getByText("Current balance")).toBeTruthy();
 
@@ -287,7 +287,7 @@ describe("App", () => {
   test("visible task buttons open full page workspaces instead of side panels", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
+    fireEvent.click(screen.getByRole("button", { name: "Manage users" }));
 
     expect(screen.getByRole("heading", { name: "User Access Control" })).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
@@ -295,21 +295,21 @@ describe("App", () => {
     expect(screen.queryByRole("heading", { name: "Communication Center" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Operations Queue" })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Admin" }));
-    expect(screen.getByRole("heading", { name: "Admin Control Center" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "User Administration" }));
+    expect(screen.getByRole("heading", { name: "User Administration & Access Control" })).toBeTruthy();
   });
 
   test("finance admissions and resource buttons open concrete reports and forms", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Finance Officer")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Statement Exports" }));
+    fireEvent.click(screen.getByRole("button", { name: "Export statements" }));
     expect(screen.getByRole("heading", { name: "Statement Export Center" })).toBeTruthy();
     expect(screen.getByLabelText("Statement format")).toHaveValue("Signed PDF + Excel ledger export");
     fireEvent.click(screen.getByRole("button", { name: "Download statement PDF" }));
     expect(screen.getByText("Statement PDF prepared for guardian delivery"));
 
     rerender(<App initialDashboard={dashboard("Admissions Officer")} />);
-    fireEvent.click(screen.getByRole("button", { name: "Offer Letters" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare offer letters" }));
     expect(screen.getByRole("heading", { name: "Admissions Case Workspace" })).toBeTruthy();
     expect(screen.getByLabelText("Applicant file")).toHaveValue("APP-2026-118 - Brian Otieno - Grade 4 intake");
     fireEvent.click(screen.getByRole("button", { name: "Preview offer letter" }));
@@ -325,7 +325,7 @@ describe("App", () => {
   test("dashboard actions open tabbed task pages that can be completed", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
     expect(screen.getByRole("tab", { name: "Review" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Complete" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Confirm" })).toBeTruthy();
@@ -341,7 +341,7 @@ describe("App", () => {
   test("admin workflow pages expose a complete controlled access process", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
+    fireEvent.click(screen.getByRole("button", { name: "Manage users" }));
     expect(screen.getByRole("heading", { name: "User Access Control" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Verify identity" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Assign role scope" })).toBeTruthy();
@@ -370,7 +370,7 @@ describe("App", () => {
   test("workflow review steps are clickable task prompts with relevant step pages", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Manage Users" }));
+    fireEvent.click(screen.getByRole("button", { name: "Manage users" }));
     fireEvent.click(screen.getByRole("button", { name: "Verify identity" }));
 
     expect(screen.getByRole("heading", { name: "Verify identity" })).toBeTruthy();
@@ -380,7 +380,7 @@ describe("App", () => {
   test("audit export workflow uses audit-specific clickable steps and preparation fields", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Audit Review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare audit pack" }));
 
     expect(screen.queryByRole("button", { name: "Verify identity" })).toBeNull();
     expect(screen.getByRole("button", { name: "Select audit period" })).toBeTruthy();
@@ -401,7 +401,7 @@ describe("App", () => {
   test("workflow evidence names exact school records and action outcomes", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
     fireEvent.click(screen.getByRole("button", { name: "Review balance movement" }));
 
     expect(screen.getByLabelText("Evidence required")).toHaveValue("Invoice INV-2026-041, receipt MPESA-QK82L19, discount approval DISC-004, and Nia Wanjiku ledger balance");
@@ -415,7 +415,7 @@ describe("App", () => {
 
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Audit Review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare audit pack" }));
     fireEvent.click(screen.getByRole("button", { name: "Verify export authority" }));
     fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
     fireEvent.click(screen.getByRole("button", { name: "Generate signed audit export package" }));
@@ -430,14 +430,14 @@ describe("App", () => {
 
     render(<App initialDashboard={dashboard("Parent")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
   });
 
   test("parent teacher messages support chat and media uploads", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Messages" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Parent Messages" })[0]);
 
     expect(screen.getByRole("heading", { name: "Parent Teacher Messages" })).toBeTruthy();
     expect(screen.getByLabelText("Message to teacher")).toBeTruthy();
@@ -449,7 +449,7 @@ describe("App", () => {
   test("teacher timetable upload autopicks classes and creates reminders and assignment alerts", () => {
     render(<App initialDashboard={dashboard("Teacher")} />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Timetable" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "View timetable" }));
 
     expect(screen.getByRole("heading", { name: "Timetable & Class Reminders" })).toBeTruthy();
     expect(screen.getByLabelText("Upload timetable file")).toHaveAttribute("type", "file");
@@ -471,7 +471,7 @@ describe("App", () => {
   test("resources include books past papers and revision material with clickable workflows", () => {
     render(<App initialDashboard={dashboard("Learner")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Study" }));
+    fireEvent.click(screen.getByRole("button", { name: "Study Resources" }));
 
     expect(screen.getByText("Books")).toBeTruthy();
     expect(screen.getByText("Past papers")).toBeTruthy();
@@ -483,13 +483,13 @@ describe("App", () => {
   test("admin manage users supports creating a new user and biometric registration", () => {
     render(<App initialDashboard={dashboard("Super Admin")} />);
 
-    expect(screen.getByRole("heading", { name: "Admin Control Center" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "User Administration & Access Control" })).toBeTruthy();
     expect(screen.getByLabelText("New user full name")).toBeTruthy();
     expect(screen.getByLabelText("New user role")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Create user account" }));
     expect(screen.getByText("User creation request ready for maker-checker approval")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Biometrics" }));
+    fireEvent.click(screen.getByRole("button", { name: "Biometric Identity" }));
     expect(screen.getByRole("heading", { name: "Biometric Registration & Identification" })).toBeTruthy();
     expect(screen.getByLabelText("Admission or staff number")).toBeTruthy();
     expect(screen.getByLabelText("Capture fingerprint template")).toHaveAttribute("type", "file");
@@ -521,7 +521,7 @@ describe("App", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Class Teacher")} />);
     expect(screen.getByRole("heading", { level: 1, name: "Class Teacher Workspace" })).toBeTruthy();
     expect(screen.getByText("Pastoral overview")).toBeTruthy();
-    expect(screen.getAllByRole("button", { name: "Messages" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: "Parent Messages" }).length).toBeGreaterThan(0);
 
     rerender(<App initialDashboard={dashboard("Teacher")} />);
     expect(screen.getByRole("heading", { level: 1, name: "Teacher Workspace" })).toBeTruthy();
@@ -534,9 +534,57 @@ describe("App", () => {
     Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: vi.fn() });
     const { container } = render(<App initialDashboard={dashboard("Parent")} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Fee Statement" }));
+    fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
     fireEvent.click(screen.getByRole("button", { name: "Review balance movement" }));
 
     expect(container.querySelector(".task-section.scroll-highlight")).toBeTruthy();
+  });
+  test("role navigation uses clear school portal nomenclature instead of generic labels", () => {
+    const { rerender } = render(<App initialDashboard={dashboard("Super Admin")} />);
+    expect(screen.getByRole("button", { name: "User Administration" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Biometric Identity" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Audit & Compliance" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Finance Office" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "School Overview" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Command" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Records" })).toBeNull();
+
+    rerender(<App initialDashboard={dashboard("Finance Officer")} />);
+    expect(screen.getByRole("button", { name: "Fees & Receipting" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Payment Reconciliation" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Billing" })).toBeNull();
+
+    rerender(<App initialDashboard={dashboard("Teacher")} />);
+    expect(screen.getByRole("button", { name: "Teacher Desk" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Learner Profiles" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Attendance & Welfare" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Student Portal" })).toBeNull();
+
+    rerender(<App initialDashboard={dashboard("Parent")} />);
+    expect(screen.getByRole("button", { name: "Student Profile" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Parent Messages" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Fee Account" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Library Loans" })).toBeTruthy();
+
+    rerender(<App initialDashboard={dashboard("Learner")} />);
+    expect(screen.getByRole("button", { name: "My Learning" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Class Timetable" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Study Resources" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Library Books" })).toBeTruthy();
+  });
+
+  test("admin pages cover upgraded school ERP modules beyond the basic command center", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    expect(screen.getByRole("heading", { name: "User Administration & Access Control" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "HR & Payroll" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Transport & Routes" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Stores & Procurement" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Reports & Analytics" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Transport & Routes" }));
+    expect(screen.getByRole("heading", { name: "Transport & Routes" })).toBeTruthy();
+    expect(screen.getByText("Manage bus routes, pickup points, vehicle compliance files, learner assignments, and transport billing checks.")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Confirm route roster" }).length).toBeGreaterThan(0);
   });
 });

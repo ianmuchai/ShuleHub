@@ -56,7 +56,7 @@ const resources = [
 ];
 
 const admissionsRows = ["Application Pipeline", "Application review", "Interview scheduling", "Offer letter", "Admission number", "Guardian onboarding"];
-const adminRows = ["User Access Control", "Staff Role Assignments", "Academic Year Setup", "Integration Health", "Audit Export", "Backup Readiness"];
+const adminRows = ["User Access Control", "Staff Role Assignments", "Academic Year Setup", "HR & Payroll", "Transport & Routes", "Stores & Procurement", "Reports & Analytics", "Integration Health", "Audit Export", "Backup Readiness"];
 const financeRows = ["Invoice runs", "Payment allocation", "Receipt register", "Arrears aging", "Statement exports", "Bank deposit review"];
 const teacherRows = ["Daily register", "Assessment entry", "Homework issue", "Learner comments", "Resource publishing", "Welfare follow-up"];
 const teacherLearners = [
@@ -109,49 +109,67 @@ const writeLoginHistory = (item: LoginHistoryItem) => {
 
 const navForRole = (role: string): NavItem[] => {
   const common: NavItem[] = [
-    { key: "command", label: "Command", Icon: LayoutDashboard },
-    { key: "timetable", label: "Timetable", Icon: CalendarCheck },
-    { key: "records", label: "Records", Icon: UsersRound },
-    { key: "resources", label: "Resources", Icon: BookMarked },
-    { key: "library", label: "Library", Icon: Library },
+    { key: "command", label: "School Overview", Icon: LayoutDashboard },
+    { key: "timetable", label: "Timetable & Events", Icon: CalendarCheck },
+    { key: "records", label: "Student Records", Icon: UsersRound },
+    { key: "resources", label: "Learning Resources", Icon: BookMarked },
+    { key: "library", label: "Library Services", Icon: Library },
   ];
-  if (role === "Finance Officer") return [{ key: "billing", label: "Billing", Icon: Banknote }, { key: "reconciliation", label: "Reconciliation", Icon: ReceiptText }, ...common];
-  if (role === "Class Teacher") return [{ key: "communication", label: "Messages", Icon: Mail }, { key: "register", label: "Class Register", Icon: ClipboardCheck }, { key: "student", label: "Student Portal", Icon: GraduationCap }, { key: "attendance", label: "Attendance", Icon: CalendarCheck }, ...common];
-  if (role === "Teacher") return [{ key: "communication", label: "Messages", Icon: Mail }, { key: "register", label: "Class Register", Icon: ClipboardCheck }, { key: "student", label: "Student Portal", Icon: GraduationCap }, { key: "attendance", label: "Attendance", Icon: CalendarCheck }, ...common];
-  if (role === "Admissions Officer") return [{ key: "admissions", label: "Admissions", Icon: FileText }, ...common];
-  if (role === "Parent") return [{ key: "records", label: "My Children", Icon: GraduationCap }, { key: "student", label: "Student Portal", Icon: GraduationCap }, { key: "communication", label: "Messages", Icon: Mail }, { key: "timetable", label: "Timetable", Icon: CalendarCheck }, { key: "billing", label: "Fees", Icon: Banknote }, { key: "library", label: "Library", Icon: Library }, { key: "resources", label: "Resources", Icon: BookMarked }];
-  if (role === "Learner") return [{ key: "student", label: "Student Portal", Icon: GraduationCap }, { key: "timetable", label: "Timetable", Icon: CalendarCheck }, { key: "resources", label: "Study", Icon: BookMarked }, { key: "library", label: "Library", Icon: Library }, { key: "attendance", label: "Calendar", Icon: CalendarCheck }];
-  return [{ key: "settings", label: "Admin", Icon: UserCog }, { key: "biometrics", label: "Biometrics", Icon: ShieldCheck }, { key: "student", label: "Student Portal", Icon: GraduationCap }, { key: "audit", label: "Audit", Icon: ShieldCheck }, { key: "billing", label: "Finance", Icon: Banknote }, ...common];
+  if (role === "Finance Officer") return [{ key: "billing", label: "Fees & Receipting", Icon: Banknote }, { key: "reconciliation", label: "Payment Reconciliation", Icon: ReceiptText }, ...common];
+  if (role === "Class Teacher") return [{ key: "communication", label: "Parent Messages", Icon: Mail }, { key: "register", label: "Class Register", Icon: ClipboardCheck }, { key: "student", label: "Learner Profiles", Icon: GraduationCap }, { key: "attendance", label: "Attendance & Welfare", Icon: CalendarCheck }, { key: "command", label: "Class Teacher Desk", Icon: LayoutDashboard }, { key: "timetable", label: "Timetable & Lessons", Icon: CalendarCheck }, { key: "records", label: "Student Records", Icon: UsersRound }, { key: "resources", label: "Learning Resources", Icon: BookMarked }, { key: "library", label: "Library Services", Icon: Library }];
+  if (role === "Teacher") return [{ key: "communication", label: "Parent Messages", Icon: Mail }, { key: "register", label: "Class Register", Icon: ClipboardCheck }, { key: "student", label: "Learner Profiles", Icon: GraduationCap }, { key: "attendance", label: "Attendance & Welfare", Icon: CalendarCheck }, { key: "command", label: "Teacher Desk", Icon: LayoutDashboard }, { key: "timetable", label: "Timetable & Lessons", Icon: CalendarCheck }, { key: "records", label: "Student Records", Icon: UsersRound }, { key: "resources", label: "Learning Resources", Icon: BookMarked }, { key: "library", label: "Library Services", Icon: Library }];
+  if (role === "Admissions Officer") return [{ key: "admissions", label: "Admissions & Onboarding", Icon: FileText }, ...common];
+  if (role === "Parent") return [{ key: "records", label: "My Children", Icon: GraduationCap }, { key: "student", label: "Student Profile", Icon: GraduationCap }, { key: "communication", label: "Parent Messages", Icon: Mail }, { key: "timetable", label: "Class Timetable", Icon: CalendarCheck }, { key: "billing", label: "Fee Account", Icon: Banknote }, { key: "library", label: "Library Loans", Icon: Library }, { key: "resources", label: "Learning Resources", Icon: BookMarked }];
+  if (role === "Learner") return [{ key: "student", label: "My Learning", Icon: GraduationCap }, { key: "timetable", label: "Class Timetable", Icon: CalendarCheck }, { key: "resources", label: "Study Resources", Icon: BookMarked }, { key: "library", label: "Library Books", Icon: Library }, { key: "attendance", label: "School Calendar", Icon: CalendarCheck }];
+  return [{ key: "settings", label: "User Administration", Icon: UserCog }, { key: "biometrics", label: "Biometric Identity", Icon: ShieldCheck }, { key: "student", label: "Learner Portal Access", Icon: GraduationCap }, { key: "audit", label: "Audit & Compliance", Icon: ShieldCheck }, { key: "billing", label: "Finance Office", Icon: Banknote }, ...common];
 };
 
 const actionsForRole = (role: string): Action[] => {
-  if (role === "Finance Officer") return [{ label: "Invoice Runs", key: "billing" }, { label: "M-Pesa Exceptions", key: "reconciliation" }, { label: "Statement Exports", key: "billing" }];
-  if (role === "Class Teacher") return [{ label: "Messages", key: "communication" }, { label: "Open Register", key: "register" }, { label: "Timetable", key: "timetable" }];
-  if (role === "Teacher") return [{ label: "Messages", key: "communication" }, { label: "Open Register", key: "register" }, { label: "Assessment Entry", key: "attendance" }, { label: "Publish Resource", key: "resources" }, { label: "Timetable", key: "timetable" }];
-  if (role === "Admissions Officer") return [{ label: "Pipeline Review", key: "admissions" }, { label: "Offer Letters", key: "admissions" }, { label: "Guardian Records", key: "records" }];
-  if (role === "Parent") return [{ label: "Messages", key: "communication" }, { label: "Child Profile", key: "records" }, { label: "Fee Statement", key: "billing" }, { label: "Library Loans", key: "library" }];
-  if (role === "Learner") return [{ label: "Student Portal", key: "student" }, { label: "Assignments", key: "resources" }, { label: "Borrowed Books", key: "library" }, { label: "Study Calendar", key: "attendance" }];
-  return [{ label: "Manage Users", key: "settings" }, { label: "Secure Integrations", key: "settings" }, { label: "Audit Review", key: "audit" }];
+  if (role === "Finance Officer") return [{ label: "Run invoices", key: "billing" }, { label: "Resolve M-Pesa exceptions", key: "reconciliation" }, { label: "Export statements", key: "billing" }];
+  if (role === "Class Teacher") return [{ label: "Message parents", key: "communication" }, { label: "Take daily register", key: "register" }, { label: "View class timetable", key: "timetable" }];
+  if (role === "Teacher") return [{ label: "Message parents", key: "communication" }, { label: "Take daily register", key: "register" }, { label: "Enter marks", key: "attendance" }, { label: "Publish learning resource", key: "resources" }, { label: "View timetable", key: "timetable" }];
+  if (role === "Admissions Officer") return [{ label: "Review applications", key: "admissions" }, { label: "Prepare offer letters", key: "admissions" }, { label: "Onboard guardians", key: "records" }];
+  if (role === "Parent") return [{ label: "Message class teacher", key: "communication" }, { label: "Open child profile", key: "records" }, { label: "View fee statement", key: "billing" }, { label: "Review library loans", key: "library" }];
+  if (role === "Learner") return [{ label: "Open my learning", key: "student" }, { label: "Open assignments", key: "resources" }, { label: "Review borrowed books", key: "library" }, { label: "Open study calendar", key: "attendance" }];
+  return [{ label: "Manage users", key: "settings" }, { label: "Check integrations", key: "settings" }, { label: "Prepare audit pack", key: "audit" }];
 };
-
 
 const workflowForAction = (label: string) => {
   const map: Record<string, string> = {
+    "Manage users": "User Access Control",
     "Manage Users": "User Access Control",
+    "Check integrations": "Integration Health",
     "Secure Integrations": "Integration Health",
+    "Prepare audit pack": "Audit Export",
     "Audit Review": "Audit Export",
+    "View fee statement": "Fee Statement",
     "Fee Statement": "Fee Statement",
+    "Review library loans": "Library Loans",
     "Library Loans": "Library Loans",
+    "Open child profile": "Child Profile",
     "Child Profile": "Child Profile",
+    "Take daily register": "Daily register",
     "Open Register": "Daily register",
+    "Enter marks": "Assessment entry",
     "Assessment Entry": "Assessment entry",
+    "Publish learning resource": "Resource publishing",
     "Publish Resource": "Resource publishing",
+    "Run invoices": "Invoice runs",
     "Invoice Runs": "Invoice runs",
+    "Resolve M-Pesa exceptions": "M-Pesa Exceptions",
     "M-Pesa Exceptions": "M-Pesa Exceptions",
+    "Export statements": "Statement exports",
     "Statement Exports": "Statement exports",
+    "Review applications": "Application Pipeline",
     "Pipeline Review": "Application Pipeline",
+    "Prepare offer letters": "Offer letter",
     "Offer Letters": "Offer letter",
-    "Guardian Records": "Guardian onboarding"
+    "Onboard guardians": "Guardian onboarding",
+    "Guardian Records": "Guardian onboarding",
+    "Open assignments": "Mathematics Assignment",
+    "Open study calendar": "Attendance Calendar",
+    "Review borrowed books": "Borrowed Books",
+    "Open my learning": "Mathematics Assignment"
   };
   return map[label] ?? label;
 };
@@ -160,8 +178,12 @@ const workflowDetail = (title: string): WorkflowDetailItem => {
     "Daily register": { title: "Daily register", status: "Today", owner: "Class teacher", detail: "Marked present, absent, late, and follow-up notes for the active class stream.", next: "Open attendance register" },
     "User Access Control": { title: "User Access Control", status: "Restricted", owner: "Super Admin", detail: "Create users, suspend access, reset credentials, and enforce role boundaries with audit trails.", next: "Open user control" },
     "Staff Role Assignments": { title: "Staff Role Assignments", status: "Restricted", owner: "HR Manager", detail: "Review staff appointment records, role assignment request, approval scope, and maker-checker audit controls.", next: "Open staff role assignment" },
-    "Academic Year Setup": { title: "Academic Year Setup", status: "Ready", owner: "Deputy Academics", detail: "Configure terms, streams, grading windows, promotion rules, and report release dates.", next: "Edit school calendar" },
-    "Integration Health": { title: "Integration Health", status: "Secure", owner: "ICT Admin", detail: "Monitor M-Pesa, SMS, email, backups, webhook signatures, and failed callbacks.", next: "Inspect integrations" },
+    "Academic Year Setup": { title: "Academic Year Setup", status: "Ready", owner: "Deputy Academics", detail: "Configure terms, streams, exam types, grading windows, promotions, CBE report release dates, and parent portal publishing controls.", next: "Edit school calendar" },
+    "HR & Payroll": { title: "HR & Payroll", status: "Restricted", owner: "HR Manager", detail: "Manage staff onboarding, payruns, payslips, deductions, leave approvals, payroll reports, and statutory-ready staff records.", next: "Review staff payroll controls" },
+    "Transport & Routes": { title: "Transport & Routes", status: "Operational", owner: "Transport Officer", detail: "Manage bus routes, pickup points, vehicle compliance files, learner assignments, and transport billing checks.", next: "Confirm route roster" },
+    "Stores & Procurement": { title: "Stores & Procurement", status: "Controlled", owner: "Procurement Officer", detail: "Manage inventory categories, suppliers, requisitions, purchase orders, goods received, dispensing, stock takes, and write-offs.", next: "Open procurement control" },
+    "Reports & Analytics": { title: "Reports & Analytics", status: "Ready", owner: "School Director", detail: "Generate finance, votehead, attendance, transport, library, HR, CBC performance, and audit reports from one reporting desk.", next: "Generate school report pack" },
+    "Integration Health": { title: "Integration Health", status: "Secure", owner: "ICT Admin", detail: "Monitor M-Pesa, SMS, WhatsApp, email, QuickBooks, backups, webhook signatures, and failed callbacks.", next: "Inspect integrations" },
     "Audit Export": { title: "Audit Export", status: "Controlled", owner: "Compliance", detail: "Export tamper-evident logs for finance, admissions, account access, and record edits.", next: "Prepare audit export" },
     "Fee Statement": { title: "Fee Statement", status: "Statement ready", owner: "Bursar", detail: "Review invoices, receipts, discounts, transport, meals, and balance movement for the selected child.", next: "Open statement" },
     "Library Loans": { title: "Library loan actions", status: "2 active", owner: "Library", detail: "Review current borrowed books, due dates, renewal status, and return follow-up.", next: "Open loan record" },
@@ -176,7 +198,7 @@ const workflowDetail = (title: string): WorkflowDetailItem => {
     "Arrears aging": { title: "Arrears aging", status: "Dispute available", owner: "Bursar", detail: "Review overdue invoices, promised payment dates, disputed charges, reminders, and guardian response history.", next: "Open arrears dispute" },
     "Grade 4 Revision Pack": { title: "Grade 4 Revision Pack", status: "Ready", owner: "Academic Lead", detail: "Open books, past papers, marking schemes, revision notes, and permitted download access for Grade 4 learners.", next: "Open revision pack" }
   };
-  return details[title] ?? { title, status: "Ready", owner: "Assigned staff owner", detail: `Review ${title} records, confirm the required school evidence, and complete the ${title.toLowerCase()} task with an auditable note.`, next: `Open ${title} task` };
+  return details[title] ?? { title, status: "Ready", owner: "Assigned staff owner", detail: `${title} opens as a school task page with record checks, evidence capture, role permission review, and an auditable completion step.`, next: `Continue ${title}` };
 };
 
 function Stat({ label, value, Icon }: { label: string; value: string | number; Icon: LucideIcon }) {
@@ -245,6 +267,12 @@ const studentAssignmentReviewSteps: WorkflowStep[] = [
   { title: "Queue support notice", detail: "Prepare the right in-app reminder without exposing another learner's task or marks.", evidence: "Recipients Nia Wanjiku and Esther Guardian, template ASSIGNMENT-DUE-01, no classwide marks included", action: "Queue assignment reminder" },
 ];
 
+const transportReviewSteps: WorkflowStep[] = [
+  { title: "Confirm route roster", detail: "Match every learner to the correct route, pickup point, guardian contact, and transport billing group.", evidence: "Route R-04 Eastlands, bus KDB 118P, pickup Umoja Stage 2, learners Nia Wanjiku and Amani Otieno, billing group Term 2 Transport", action: "Save route roster evidence" },
+  { title: "Check vehicle compliance", detail: "Review insurance, inspection, driver assignment, speed-governor status, and emergency contact records before route approval.", evidence: "Insurance INS-BUS-118, inspection NTSA-2026-774, driver Peter Mwangi PAY-0188, emergency contact 0722 000 118", action: "Attach vehicle compliance records" },
+  { title: "Verify transport billing", detail: "Confirm the route charge, sibling rules, exemptions, and bursar approval before posting transport fees.", evidence: "Votehead Transport, KES 5,000 Term 2 charge, exemption none, linked invoice INV-2026-041", action: "Save transport billing check" },
+];
+
 const attendanceReviewSteps: WorkflowStep[] = [
   { title: "Open term attendance", detail: "Review each school day, register mark, late reason, and teacher follow-up note for the learner.", evidence: "Grade 4 East term attendance, Nia Wanjiku ADM-2026-000, present 42, absent 2, late 1", action: "Save attendance review" },
   { title: "Check absence evidence", detail: "Confirm absence notes, medical slips, guardian messages, and class teacher acknowledgement.", evidence: "Absence ABS-2026-044, guardian SMS acknowledged, medical note MED-0820, teacher David Class Teacher", action: "Attach absence evidence" },
@@ -258,6 +286,8 @@ const learningReviewSteps: WorkflowStep[] = [
 ];
 
 const reviewStepsFor = (title: string) => {
+  if (title === "Transport & Routes") return transportReviewSteps;
+  if (title === "HR & Payroll" || title === "Stores & Procurement" || title === "Reports & Analytics" || title === "Backup Readiness" || title === "Academic Year Setup") return accessReviewSteps;
   if (title === "Audit Export") return auditReviewSteps;
   if (title === "Integration Health") return integrationReviewSteps;
   if (title === "Staff Role Assignments") return staffRoleReviewSteps;
@@ -289,6 +319,10 @@ const completionFor = (item: WorkflowDetailItem): CompletionConfig => {
   if (item.title === "Integration Health") return { primaryLabel: "Integration action", secondaryLabel: "Technical note", primaryValue: "Retry failed callbacks MPESA-ERR-1021 and SMS-ERR-662", secondaryValue: "Webhook signatures verified; no duplicate receipt posting", buttonLabel: "Apply signed integration update", status: "Integration update ready for ICT approval" };
   if (item.title === "User Access Control") return { primaryLabel: "Account action", secondaryLabel: "Approval notes", primaryValue: "Approve Grade 4 East teacher access until 20 Dec 2026", secondaryValue: "Verified against HR record HR-2026-014 and checker Amina Principal", buttonLabel: "Submit scoped access approval", status: "Access change ready for checker approval" };
   if (item.title === "Staff Role Assignments") return { primaryLabel: "Staff role action", secondaryLabel: "HR approval note", primaryValue: "Assign Grade 4 East class-teacher scope to PAY-0142 until 20 Dec 2026", secondaryValue: "Appointment HR-2026-014 verified; no finance checker privilege granted", buttonLabel: "Submit staff role assignment for checker approval", status: "Staff role assignment ready for HR checker approval" };
+  if (item.title === "Transport & Routes") return { primaryLabel: "Route action", secondaryLabel: "Transport evidence", primaryValue: "Approve Route R-04 Eastlands roster and vehicle KDB 118P compliance review", secondaryValue: "Learner roster, pickup points, guardian contacts, and transport votehead charge checked", buttonLabel: "Submit route roster for approval", status: "Transport route update ready for transport-office approval" };
+  if (item.title === "HR & Payroll") return { primaryLabel: "Payroll action", secondaryLabel: "HR evidence", primaryValue: "Prepare August payrun and staff leave approvals for checker review", secondaryValue: "Staff setup, deductions, payslips, leave balance, and statutory report references attached", buttonLabel: "Submit payroll control review", status: "Payroll control review ready for HR checker approval" };
+  if (item.title === "Stores & Procurement") return { primaryLabel: "Procurement action", secondaryLabel: "Stores evidence", primaryValue: "Approve science-lab stock requisition and goods received note", secondaryValue: "Supplier, purchase order, stock count, issue voucher, and write-off controls attached", buttonLabel: "Submit procurement control review", status: "Procurement review ready for stores approval" };
+  if (item.title === "Reports & Analytics") return { primaryLabel: "Report pack", secondaryLabel: "Reporting evidence", primaryValue: "Generate term director pack: finance, votehead, attendance, library, transport, HR, and CBC performance", secondaryValue: "Data range Term 2 2026, masked learner identifiers, export checksum, and board recipient list", buttonLabel: "Generate school report pack", status: "School report pack ready for director review" };
   if (item.title.includes("Fee") || item.title.includes("Payment") || item.title.includes("M-Pesa") || item.title.includes("Invoice") || item.title.includes("Statement") || item.title.includes("Arrears")) return { primaryLabel: "Payment method", secondaryLabel: "Amount to process", primaryValue: "M-Pesa receipt MPESA-QK82L19 to invoice INV-2026-041", secondaryValue: "KES 5,000 for Nia Wanjiku ADM-2026-000", buttonLabel: "Post verified payment allocation", status: "Payment allocation ready for bursar approval" };
   if (item.title.includes("Library") || item.title.includes("Borrowed") || item.title.includes("loan")) return { primaryLabel: "Library action", secondaryLabel: "Loan note", primaryValue: "Renew barcode LIB-ENG-042 for Nia Wanjiku", secondaryValue: "Due 26 Aug 2026; guardian notice queued", buttonLabel: "Save library loan update", status: "Library loan update ready for approval" };
   return { primaryLabel: `${item.title} action`, secondaryLabel: `${item.owner} evidence note`, primaryValue: item.next, secondaryValue: `Prepared for ${item.owner} with linked learner, class, finance, or library evidence`, buttonLabel: `Save ${item.title} update`, status: `${item.title} update ready for owner approval` };
@@ -422,7 +456,7 @@ function TimetableWorkspace({ dashboard }: { dashboard: Dashboard }) {
 
 function AdminControlCenter({ onOpen }: { onOpen: (row: string) => void }) {
   const [created, setCreated] = useState(false);
-  return <section className="module wide ops-panel"><header><UserCog size={20} /><h3>Admin Control Center</h3></header><div className="admin-action-grid">{adminRows.map((row) => <button className="table-row" type="button" key={row} aria-label={row} onClick={() => onOpen(row)}><span>{row}</span><small>{row.includes("Access") || row.includes("Audit") || row.includes("Integration") || row.includes("Role") ? "Restricted" : "Workspace"}</small><strong>Open</strong></button>)}</div><div className="ops-form"><h4>Add New User</h4><label><span>New user full name</span><input aria-label="New user full name" defaultValue="Grace Wambui" /></label><label><span>New user role</span><select aria-label="New user role" defaultValue="Class Teacher"><option>Class Teacher</option><option>Teacher</option><option>Parent</option><option>Student</option><option>Bursar</option></select></label><label><span>Role scope and evidence</span><input aria-label="Role scope and evidence" defaultValue="Grade 4 East, HR-2026-014, checker Amina Principal" /></label><button type="button" className="inline-action" onClick={() => setCreated(true)}>Create user account</button>{created && <strong className="task-status">User creation request ready for maker-checker approval</strong>}</div></section>;
+  return <section className="module wide ops-panel"><header><UserCog size={20} /><h3>User Administration & Access Control</h3></header><div className="admin-action-grid">{adminRows.map((row) => <button className="table-row" type="button" key={row} aria-label={row} onClick={() => onOpen(row)}><span>{row}</span><small>{row.includes("Access") || row.includes("Audit") || row.includes("Integration") || row.includes("Role") ? "Restricted" : "Workspace"}</small><strong>Open</strong></button>)}</div><div className="ops-form"><h4>Add New User</h4><label><span>New user full name</span><input aria-label="New user full name" defaultValue="Grace Wambui" /></label><label><span>New user role</span><select aria-label="New user role" defaultValue="Class Teacher"><option>Class Teacher</option><option>Teacher</option><option>Parent</option><option>Student</option><option>Bursar</option></select></label><label><span>Role scope and evidence</span><input aria-label="Role scope and evidence" defaultValue="Grade 4 East, HR-2026-014, checker Amina Principal" /></label><button type="button" className="inline-action" onClick={() => setCreated(true)}>Create user account</button>{created && <strong className="task-status">User creation request ready for maker-checker approval</strong>}</div></section>;
 }
 
 function BiometricWorkspace() {
@@ -436,13 +470,13 @@ function ResourcesWorkspace({ dashboard, onOpen }: { dashboard: Dashboard; onOpe
 
 function BillingWorkspace({ dashboard, onOpen, selected }: { dashboard: Dashboard; onOpen: (row: string) => void; selected?: string }) {
   const [dispute, setDispute] = useState(false);
-  return <section className="module"><header><Banknote size={20} /><h3>{dashboard.role === "Finance Officer" ? "Billing Control" : "Fee Statement & Payments"}</h3></header>{dashboard.role !== "Finance Officer" && <div className="balance-callout"><span>Current balance</span><strong>{formatKes(dashboard.parentLearners[0]?.balance ?? dashboard.totals.openBalance)}</strong></div>}{financeRows.map((row, index) => <button className={selected === row ? "table-row selected" : "table-row"} type="button" key={row} aria-label={row} onClick={() => onOpen(row)}><span>{row}</span><small>Finance</small><strong>{index % 2 === 0 ? "Ready" : "Review"}</strong></button>)}<button type="button" className="inline-action" onClick={() => setDispute(true)}>Raise arrears dispute</button>{dispute && <strong className="task-status">Arrears dispute case opened for bursar review</strong>}</section>;
+  return <section className="module"><header><Banknote size={20} /><h3>{dashboard.role === "Finance Officer" ? "Fees & Receipting" : "Fee Statement & Payments"}</h3></header>{dashboard.role !== "Finance Officer" && <div className="balance-callout"><span>Current balance</span><strong>{formatKes(dashboard.parentLearners[0]?.balance ?? dashboard.totals.openBalance)}</strong></div>}{financeRows.map((row, index) => <button className={selected === row ? "table-row selected" : "table-row"} type="button" key={row} aria-label={row} onClick={() => onOpen(row)}><span>{row}</span><small>Finance</small><strong>{index % 2 === 0 ? "Ready" : "Review"}</strong></button>)}<button type="button" className="inline-action" onClick={() => setDispute(true)}>Raise arrears dispute</button>{dispute && <strong className="task-status">Arrears dispute case opened for bursar review</strong>}</section>;
 }
 
 function RoleOverview({ dashboard, onOpen }: { dashboard: Dashboard; onOpen: (row: string) => void }) {
   if (dashboard.role === "Class Teacher") return <section className="module wide"><header><LayoutDashboard size={20} /><h3>Class Teacher Workspace</h3></header><div className="resource-board"><button type="button" className="resource-card" onClick={() => onOpen("Learner Support Plan")}><span>Pastoral overview</span><strong>Grade 4 East welfare and attendance</strong><p>Class attendance, parent messages, learner support plans, club/game assignments, and follow-up notes.</p></button><button type="button" className="resource-card" onClick={() => onOpen("Attendance Calendar")}><span>Attendance</span><strong>Class register responsibility</strong><p>Daily marks, absence evidence, guardian follow-up, and class teacher approvals.</p></button></div></section>;
-  if (dashboard.role === "Teacher") return <section className="module wide"><header><LayoutDashboard size={20} /><h3>Assigned Subject Duties</h3></header><div className="resource-board"><button type="button" className="resource-card" onClick={() => onOpen("Resource publishing")}><span>Subject classes</span><strong>Subject classes: Grade 4 East Mathematics, Grade 5 West Science</strong><p>Assignments, resources, marks entry, timetable reminders, and subject feedback for assigned teaching load.</p></button><button type="button" className="resource-card" aria-label="Publish revision material" onClick={() => onOpen("Grade 4 Revision Pack")}><span>Resources</span><strong>Publish revision material</strong><p>Books, past papers, and revision packs linked to the teacher subject timetable.</p></button><button type="button" className="resource-card" onClick={() => onOpen("Assessment entry")}><span>Assessment</span><strong>Subject marks and feedback</strong><p>Capture marks, comments, evidence, and parent-visible alerts for assigned subjects.</p></button><button type="button" className="resource-card" aria-label="Daily register" onClick={() => onOpen("Daily register")}><span>Lessons</span><strong>Timetable reminders and class register</strong><p>Class reminders, lesson attendance, assignment alerts, and follow-up tasks.</p></button></div></section>;
-  return <section className="module wide"><header><LayoutDashboard size={20} /><h3>Workspace</h3></header><div className="resource-board"><button type="button" className="resource-card" onClick={() => onOpen(defaultWorkflowForRole(dashboard.role))}><span>Open task</span><strong>{roleTitle(dashboard.role)}</strong><p>Open the main task queue, review evidence, and continue the selected school workflow.</p></button></div></section>;
+  if (dashboard.role === "Teacher") return <section className="module wide"><header><LayoutDashboard size={20} /><h3>Teacher Desk</h3></header><div className="resource-board"><button type="button" className="resource-card" onClick={() => onOpen("Resource publishing")}><span>Subject classes</span><strong>Subject classes: Grade 4 East Mathematics, Grade 5 West Science</strong><p>Assignments, resources, marks entry, timetable reminders, and subject feedback for assigned teaching load.</p></button><button type="button" className="resource-card" aria-label="Publish revision material" onClick={() => onOpen("Grade 4 Revision Pack")}><span>Resources</span><strong>Publish revision material</strong><p>Books, past papers, and revision packs linked to the teacher subject timetable.</p></button><button type="button" className="resource-card" onClick={() => onOpen("Assessment entry")}><span>Assessment</span><strong>Subject marks and feedback</strong><p>Capture marks, comments, evidence, and parent-visible alerts for assigned subjects.</p></button><button type="button" className="resource-card" aria-label="Daily register" onClick={() => onOpen("Daily register")}><span>Lessons</span><strong>Timetable reminders and class register</strong><p>Class reminders, lesson attendance, assignment alerts, and follow-up tasks.</p></button></div></section>;
+  return <section className="module wide"><header><LayoutDashboard size={20} /><h3>{dashboard.role === "Admissions Officer" ? "Admissions & Onboarding" : "School Operations Overview"}</h3></header><div className="resource-board"><button type="button" className="resource-card" onClick={() => onOpen(defaultWorkflowForRole(dashboard.role))}><span>Open task</span><strong>{roleTitle(dashboard.role)}</strong><p>Open the main task queue, review evidence, and continue the selected school workflow.</p></button></div></section>;
 }
 function StudentPortal({ dashboard, onOpen }: { dashboard: Dashboard; onOpen: (row: string) => void }) {
   const linked = dashboard.parentLearners[0] ?? parentLearnerSummary[0];
@@ -464,13 +498,13 @@ function Workspace({ dashboard, active, onOpen, selected }: { dashboard: Dashboa
   if (active === "biometrics") return <BiometricWorkspace />;
   if (active === "audit") return <section className="module"><header><ShieldCheck size={20} /><h3>Audit Trail</h3></header>{dashboard.recentAudit.map((event) => <button type="button" className="audit-line" key={event.id} onClick={() => onOpen(event.action)}><strong>{event.action}</strong><span>{event.summary}</span></button>)}</section>;
   if (active === "billing") return <BillingWorkspace dashboard={dashboard} onOpen={onOpen} selected={selected} />;
-  if (active === "reconciliation") return <DataTable title="Reconciliation Queue" rows={["M-Pesa Exceptions", "Duplicate callbacks", "Unmatched receipts", "Reversal approvals"]} icon={ReceiptText} onOpen={onOpen} selected={selected} />;
+  if (active === "reconciliation") return <DataTable title="Payment Reconciliation" rows={["M-Pesa Exceptions", "Duplicate callbacks", "Unmatched receipts", "Reversal approvals"]} icon={ReceiptText} onOpen={onOpen} selected={selected} />;
   if (active === "register") return <DataTable title="Class Register" rows={teacherRows} icon={ClipboardCheck} onOpen={onOpen} selected={selected} />;
-  if (active === "attendance") return <DataTable title="Attendance & Calendar" rows={["Daily register", "Late arrivals", "Absence follow-up", "Assessment calendar"]} icon={CalendarCheck} onOpen={onOpen} selected={selected} />;
-  if (active === "admissions") return <DataTable title="Applications" rows={admissionsRows} icon={FileText} onOpen={onOpen} selected={selected} />;
+  if (active === "attendance") return <DataTable title="Attendance & Welfare Calendar" rows={["Daily register", "Late arrivals", "Absence follow-up", "Assessment calendar"]} icon={CalendarCheck} onOpen={onOpen} selected={selected} />;
+  if (active === "admissions") return <DataTable title="Admissions & Onboarding" rows={admissionsRows} icon={FileText} onOpen={onOpen} selected={selected} />;
   if (active === "resources") return <ResourcesWorkspace dashboard={dashboard} onOpen={onOpen} />;
   if (active === "library") return <section className="module"><header><Library size={20} /><h3>{dashboard.role === "Parent" || dashboard.role === "Learner" ? "Borrowed Books" : "Library Books"}</h3></header>{visibleLoans.map((loan) => <button type="button" className="library-line" key={loan.barcode} onClick={() => onOpen(loan.title)}><div><strong>{loan.title}</strong><span>{loan.barcode}</span></div><div><strong>{loan.status}</strong><span>Due {loan.due}</span></div></button>)}</section>;
-  if (active === "records") return <section className="module"><header><GraduationCap size={20} /><h3>{dashboard.role === "Parent" ? "Child Records" : "Learner Records"}</h3></header>{dashboard.parentLearners.map((item) => <button type="button" className="library-line" key={item.learner.id} onClick={() => onOpen(`${item.learner.firstName} ${item.learner.lastName}`)}><div><strong>{item.learner.firstName} {item.learner.lastName}</strong><span>{item.learner.admissionNumber}</span></div><div><strong>{item.attendanceRate}% attendance</strong><span>{formatKes(item.balance)}</span></div></button>)}{dashboard.role === "Parent" && <><button type="button" className="library-line" onClick={() => onOpen("The River and the Source")}><div><strong>The River and the Source</strong><span>Current library loan</span></div><div><strong>Due soon</strong><span>Due 26 Aug</span></div></button><button type="button" className="library-line" onClick={() => onOpen("Grade 4 Mathematics Practice Pack")}><div><strong>Grade 4 Mathematics Practice Pack</strong><span>Learning resource</span></div><div><strong>Shared</strong><span>Family and teacher access</span></div></button></>}</section>;
+  if (active === "records") return <section className="module"><header><GraduationCap size={20} /><h3>{dashboard.role === "Parent" ? "Student Profile" : "Student Records"}</h3></header>{dashboard.parentLearners.map((item) => <button type="button" className="library-line" key={item.learner.id} onClick={() => onOpen(`${item.learner.firstName} ${item.learner.lastName}`)}><div><strong>{item.learner.firstName} {item.learner.lastName}</strong><span>{item.learner.admissionNumber}</span></div><div><strong>{item.attendanceRate}% attendance</strong><span>{formatKes(item.balance)}</span></div></button>)}{dashboard.role === "Parent" && <><button type="button" className="library-line" onClick={() => onOpen("The River and the Source")}><div><strong>The River and the Source</strong><span>Current library loan</span></div><div><strong>Due soon</strong><span>Due 26 Aug</span></div></button><button type="button" className="library-line" onClick={() => onOpen("Grade 4 Mathematics Practice Pack")}><div><strong>Grade 4 Mathematics Practice Pack</strong><span>Learning resource</span></div><div><strong>Shared</strong><span>Family and teacher access</span></div></button></>}</section>;
   return <RoleOverview dashboard={dashboard} onOpen={onOpen} />;
 }
 
@@ -482,8 +516,8 @@ function DashboardView({ dashboard, onRoleChange, onSignOut }: { dashboard: Dash
   const actions = useMemo(() => actionsForRole(dashboard.role), [dashboard.role]);
   const assignableRoles = dashboard.user.roles?.length ? dashboard.user.roles : [dashboard.role];
   const workflowRef = useRef<HTMLDivElement | null>(null);
-  const workspaceOnlyActions = new Set(["Messages", "Timetable", "Student Portal"]);
-  const workspacePanelActions = new Set(["M-Pesa Exceptions", "Fee Statement", "Library Loans"]);
+  const workspaceOnlyActions = new Set(["Messages", "Timetable", "Student Portal", "Message parents", "Message class teacher", "View class timetable", "View timetable"]);
+  const workspacePanelActions = new Set(["M-Pesa Exceptions", "Fee Statement", "Library Loans", "Resolve M-Pesa exceptions", "View fee statement", "Review library loans"]);
 
   useEffect(() => {
     setActive(defaultWorkspace(dashboard.role));
