@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Banknote,
@@ -334,49 +334,46 @@ const completionFor = (item: WorkflowDetailItem): CompletionConfig => {
 };
 
 function WorkflowStepPanel({ step, onDone }: { step: WorkflowStep; onDone: () => void }) {
-  return <article className="step-workspace" key={step.title}><header><span className="eyebrow">Selected step</span><h4>{step.title}</h4></header><p>{step.detail}</p><label><span>Evidence required</span><input aria-label="Evidence required" defaultValue={step.evidence} key={step.title} /></label><button type="button" onClick={onDone}><ArrowRight size={18} />{step.action}</button></article>;
+  return <article className="step-workspace" key={step.title}><header><span className="eyebrow">Active task</span><h4>{step.title}</h4></header><p>{step.detail}</p><label><span>Evidence required</span><input aria-label="Evidence required" defaultValue={step.evidence} key={step.title} /></label><button type="button" onClick={onDone}><ArrowRight size={18} />{step.action}</button></article>;
 }
 
 function WorkflowDetailPanel({ item }: { item: WorkflowDetailItem }) {
   const reviewSteps = useMemo(() => reviewStepsFor(item.title), [item.title]);
   const confirmationSteps = useMemo(() => confirmStepsFor(item), [item.title, item.owner]);
   const completion = useMemo(() => completionFor(item), [item.title, item.next, item.owner]);
-  const [activeTab, setActiveTab] = useState("Review");
+  const [activeTab, setActiveTab] = useState("Review evidence");
   const [submitted, setSubmitted] = useState(false);
   const [activeStep, setActiveStep] = useState<WorkflowStep>(reviewSteps[0]);
   const [highlightTask, setHighlightTask] = useState(false);
-  const taskBodyRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollToChangedPanel = () => {
+  const markChangedPanel = () => {
     setHighlightTask(true);
-    window.requestAnimationFrame(() => taskBodyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   useEffect(() => {
-    setActiveTab("Review");
+    setActiveTab("Review evidence");
     setSubmitted(false);
     setActiveStep(reviewSteps[0]);
     setHighlightTask(false);
   }, [item.title, reviewSteps]);
 
-  const tabs = ["Review", "Complete", "Confirm"];
-  const steps = activeTab === "Confirm" ? confirmationSteps : reviewSteps;
+  const tabs = ["Review evidence", "Complete task", "Final approval"];
+  const steps = activeTab === "Final approval" ? confirmationSteps : reviewSteps;
   const openTab = (tab: string) => {
     setActiveTab(tab);
     setSubmitted(false);
-    setActiveStep(tab === "Confirm" ? confirmationSteps[0] : reviewSteps[0]);
-    scrollToChangedPanel();
+    setActiveStep(tab === "Final approval" ? confirmationSteps[0] : reviewSteps[0]);
+    markChangedPanel();
   };
   const openStep = (step: WorkflowStep) => {
     setActiveStep(step);
-    scrollToChangedPanel();
+    markChangedPanel();
   };
   const submitTask = () => {
     setSubmitted(true);
-    scrollToChangedPanel();
+    markChangedPanel();
   };
 
-  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => openTab(tab)}>{tab}</button>)}</div>{activeTab === "Review" && <div className={highlightTask ? "task-section scroll-highlight" : "task-section"} ref={taskBodyRef}><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => openStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => openTab("Complete")} /><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button" onClick={() => openTab("Complete")}><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete" && <div className={highlightTask ? "task-section scroll-highlight" : "task-section"} ref={taskBodyRef}><div className="task-fields"><label><span>{completion.primaryLabel}</span><input aria-label={completion.primaryLabel} defaultValue={completion.primaryValue} key={`${item.title}-${completion.primaryLabel}`} /></label><label><span>{completion.secondaryLabel}</span><input aria-label={completion.secondaryLabel} defaultValue={completion.secondaryValue} key={`${item.title}-${completion.secondaryLabel}`} /></label></div><button type="button" onClick={submitTask}><ArrowRight size={18} />{completion.buttonLabel}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}{activeTab === "Confirm" && <div className={highlightTask ? "task-section scroll-highlight" : "task-section"} ref={taskBodyRef}><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => openStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={submitTask} /><button type="button" onClick={submitTask}><ArrowRight size={18} />{item.next}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}</section>;
+  return <section className="module task-page"><div className="task-page-header"><span className="eyebrow">Task page</span><h3>{item.title}</h3><p>{item.detail}</p></div><div className="task-tabs" role="tablist" aria-label={`${item.title} task sections`}>{tabs.map((tab) => <button key={tab} role="tab" type="button" aria-selected={activeTab === tab} className={activeTab === tab ? "active" : ""} onClick={() => openTab(tab)}>{tab}</button>)}</div>{activeTab === "Review evidence" && <div className={highlightTask ? "task-section scroll-highlight" : "task-section"} ><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => openStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={() => openTab("Complete task")} /><div className="detail-meta"><span>{item.owner}</span><strong>{item.status}</strong></div><button type="button" onClick={() => openTab("Complete task")}><ArrowRight size={18} />{item.next}</button></div>}{activeTab === "Complete task" && <div className={highlightTask ? "task-section scroll-highlight" : "task-section"} ><div className="task-fields"><label><span>{completion.primaryLabel}</span><input aria-label={completion.primaryLabel} defaultValue={completion.primaryValue} key={`${item.title}-${completion.primaryLabel}`} /></label><label><span>{completion.secondaryLabel}</span><input aria-label={completion.secondaryLabel} defaultValue={completion.secondaryValue} key={`${item.title}-${completion.secondaryLabel}`} /></label></div><button type="button" onClick={submitTask}><ArrowRight size={18} />{completion.buttonLabel}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}{activeTab === "Final approval" && <div className={highlightTask ? "task-section scroll-highlight" : "task-section"} ><div className="process-list">{steps.map((step) => <button className={activeStep.title === step.title ? "active" : ""} type="button" key={step.title} onClick={() => openStep(step)}>{step.title}</button>)}</div><WorkflowStepPanel step={activeStep} onDone={submitTask} /><button type="button" onClick={submitTask}><ArrowRight size={18} />{item.next}</button>{submitted && <strong className="task-status">{completion.status}</strong>}</div>}</section>;
 }
 function studentPortalAccessLabel(role: string) {
   if (role === "Parent") return "Guardian view";
@@ -534,9 +531,7 @@ function DashboardView({ dashboard, onRoleChange, onSignOut }: { dashboard: Dash
   const nav = useMemo(() => navForRole(dashboard.role), [dashboard.role]);
   const actions = useMemo(() => actionsForRole(dashboard.role), [dashboard.role]);
   const assignableRoles = dashboard.user.roles?.length ? dashboard.user.roles : [dashboard.role];
-  const workflowRef = useRef<HTMLDivElement | null>(null);
-  const workspaceOnlyActions = new Set(["Messages", "Timetable", "Student Portal", "Message parents", "Message class teacher", "View class timetable", "View timetable"]);
-  const workspacePanelActions = new Set(["M-Pesa Exceptions", "Fee Statement", "Library Loans", "Resolve M-Pesa exceptions", "View fee statement", "Review library loans"]);
+  const workspacePageActions = new Set(["Message parents", "Message class teacher", "View class timetable", "View timetable"]);
 
   useEffect(() => {
     setActive(defaultWorkspace(dashboard.role));
@@ -544,14 +539,9 @@ function DashboardView({ dashboard, onRoleChange, onSignOut }: { dashboard: Dash
     setFocusedWorkflow(false);
   }, [dashboard.role]);
 
-  const scrollToWorkflow = () => {
-    window.requestAnimationFrame(() => workflowRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  };
-
   const openWorkflow = (workflow: string) => {
     setSelectedWorkflow(workflowDetail(workflowForAction(workflow)));
     setFocusedWorkflow(true);
-    scrollToWorkflow();
   };
 
   const openArea = (key: WorkspaceKey, workflow?: string) => {
@@ -562,17 +552,15 @@ function DashboardView({ dashboard, onRoleChange, onSignOut }: { dashboard: Dash
     }
     setFocusedWorkflow(false);
     setSelectedWorkflow(workflowDetail(defaultWorkflowForRole(dashboard.role)));
-    scrollToWorkflow();
   };
 
-  const openWorkspaceWithPanel = (key: WorkspaceKey, workflow: string) => {
-    setActive(key);
-    setSelectedWorkflow(workflowDetail(workflow));
+  const closeTaskPage = () => {
+    setActive(defaultWorkspace(dashboard.role));
     setFocusedWorkflow(false);
-    scrollToWorkflow();
+    setSelectedWorkflow(workflowDetail(defaultWorkflowForRole(dashboard.role)));
   };
 
-  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => openArea(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="session-tools"><div className="trust"><ShieldCheck size={18} />Role-secured session</div>{assignableRoles.length > 1 && <div className="role-switcher" aria-label="Switch active role">{assignableRoles.map((role) => role === dashboard.role ? <span className="current-role" key={role}>{roleDisplay(role)}</span> : <button type="button" key={role} onClick={() => onRoleChange(role)}>Switch to {roleDisplay(role)}</button>)}</div>}<button className="sign-out" type="button" onClick={onSignOut}><LogOut size={18} />Sign out</button></div></header><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => workspaceOnlyActions.has(action.label) ? openArea(action.key) : workspacePanelActions.has(action.label) ? openWorkspaceWithPanel(action.key, workflowForAction(action.label)) : openArea(action.key, workflowForAction(action.label))}>{action.label}</button>)}</section><section className={focusedWorkflow ? "work-grid task-focus-grid" : "work-grid"} ref={workflowRef}>{focusedWorkflow ? <FocusedWorkflowPage dashboard={dashboard} item={selectedWorkflow} /> : <><Workspace dashboard={dashboard} active={active} onOpen={openWorkflow} selected={selectedWorkflow.title} /><div className="workflow-anchor"><WorkflowDetailPanel item={selectedWorkflow} /></div><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} onOpen={openWorkflow} selected={selectedWorkflow.title} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} onOpen={openWorkflow} selected={selectedWorkflow.title} />}</>}</section></section></main>;
+  return <main className="portal"><aside className="portal-nav"><div className="brand"><span>SH</span><strong>{productName}</strong></div>{nav.map(({ key, label, Icon }) => <button className={active === key ? "active" : ""} type="button" key={key} onClick={() => openArea(key)}><Icon size={18} />{label}</button>)}</aside><section className="portal-main"><header className="portal-header"><div><p>{dashboard.user.name}</p><h1>{roleTitle(dashboard.role)}</h1></div><div className="session-tools"><div className="trust"><ShieldCheck size={18} />Role-secured session</div>{assignableRoles.length > 1 && <div className="role-switcher" aria-label="Switch active role">{assignableRoles.map((role) => role === dashboard.role ? <span className="current-role" key={role}>{roleDisplay(role)}</span> : <button type="button" key={role} onClick={() => onRoleChange(role)}>Switch to {roleDisplay(role)}</button>)}</div>}<button className="sign-out" type="button" onClick={onSignOut}><LogOut size={18} />Sign out</button></div></header>{focusedWorkflow ? <section className="task-page-shell"><div className="task-page-toolbar"><button type="button" className="back-button" onClick={closeTaskPage}>Back to dashboard</button><span>{selectedWorkflow.owner}</span></div><FocusedWorkflowPage dashboard={dashboard} item={selectedWorkflow} /></section> : <><section className="stats"><Stat label="Learners" value={dashboard.totals.learners} Icon={GraduationCap} /><Stat label="Fee exposure" value={formatKes(dashboard.totals.openBalance)} Icon={Banknote} /><Stat label="Library loans" value={loans.length} Icon={Library} /><Stat label="Audit events" value={dashboard.totals.auditEvents} Icon={LockKeyhole} /></section><section className="action-strip">{actions.map((action) => <button type="button" key={action.label} onClick={() => workspacePageActions.has(action.label) ? openArea(action.key) : openArea(action.key, workflowForAction(action.label))}>{action.label}</button>)}</section><section className="work-grid"><Workspace dashboard={dashboard} active={active} onOpen={openWorkflow} selected={selectedWorkflow.title} /><DataTable title="Communication Center" rows={["Targeted notices", "Attendance alerts", "Fee reminders", "Report publication"]} icon={Mail} onOpen={openWorkflow} selected={selectedWorkflow.title} />{dashboard.role !== "Parent" && dashboard.role !== "Learner" && <DataTable title="Operations Queue" rows={["Pending approvals", "Follow-up tasks", "Imports", "Exports"]} icon={SlidersHorizontal} onOpen={openWorkflow} selected={selectedWorkflow.title} />}</section></>}</section></main>;
 }
 export default function App({ initialDashboard }: AppProps) {
   const [email, setEmail] = useState("");

@@ -1338,3 +1338,47 @@ select {
     grid-template-columns: 1fr;
   }
 }
+.task-page-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+.task-page-shell > .module {
+  width: 100%;
+}
+
+.task-page-toolbar {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #d8dfd6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(18, 42, 31, 0.05);
+}
+
+.task-page-toolbar span {
+  color: #59695f;
+  font-size: 0.95rem;
+  font-weight: 850;
+}
+
+.back-button {
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 9px 13px;
+  border: 1px solid #bfd3c9;
+  background: #f4fbf8;
+  color: #173d31;
+  font-weight: 900;
+}
+
+.back-button:hover {
+  border-color: #237a5c;
+  background: #e9f6f1;
+}

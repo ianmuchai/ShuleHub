@@ -128,7 +128,8 @@ describe("App", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Finance Officer")} />);
     expect(screen.getByRole("heading", { name: "Bursar Workbench" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /M-Pesa Exceptions/i }));
-    expect(screen.getByRole("heading", { name: "Payment Reconciliation" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "M-Pesa Exceptions" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back to dashboard" })).toBeTruthy();
 
     rerender(<App initialDashboard={dashboard("Teacher")} />);
     expect(screen.getByRole("heading", { name: "Teacher Workspace" })).toBeTruthy();
@@ -161,11 +162,12 @@ describe("App", () => {
     expect(screen.getByLabelText("Evidence required")).toHaveValue("Grade 4 East assignment MAT-G4-0820, teacher David Class Teacher, due 23 Aug 2026, learner Nia Wanjiku");
   });
 
-  test("student portal starts with a concrete learner task instead of a placeholder workflow", () => {
+  test("student portal starts on the learner overview without opening a hidden workflow panel", () => {
     render(<App initialDashboard={dashboard("Learner")} />);
 
-    expect(screen.getByRole("heading", { name: "Mathematics Assignment" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Learner Overview" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Current workflow" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Back to dashboard" })).toBeNull();
   });
   test("student portal is available only to relevant learner, guardian, teacher, and admin roles", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Parent")} />);
@@ -210,16 +212,18 @@ describe("App", () => {
     expect(screen.queryByText("Audit Export")).toBeNull();
   });
 
-  test("workflow buttons open focused panels with role-specific data", () => {
+  test("workflow buttons open focused pages with role-specific data", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
 
     fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
-    expect(screen.getByRole("heading", { name: "Fee Statement & Payments" })).toBeTruthy();
-    expect(screen.getByText("Current balance")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Fee Statement" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back to dashboard" })).toBeTruthy();
+    expect(screen.getByLabelText("Evidence required")).toHaveValue("Learner Nia Wanjiku ADM-2026-000, guardian Esther Guardian ID ending 2190, invoice INV-2026-041, account LEDGER-ADM-2026-000");
 
-    fireEvent.click(screen.getByRole("button", { name: "Library Loans" }));
-    expect(screen.getByRole("heading", { name: "Borrowed Books" })).toBeTruthy();
-    expect(screen.getByText("LIB-ENG-042")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Back to dashboard" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review library loans" }));
+    expect(screen.getByRole("heading", { name: "Library Loan Record" })).toBeTruthy();
+    expect(screen.getByText(/LIB-ENG-042/)).toBeTruthy();
   });
 
   test("table row buttons open concrete teacher task pages", () => {
@@ -290,7 +294,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Manage users" }));
 
     expect(screen.getByRole("heading", { name: "User Access Control" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Complete task" }));
     expect(screen.getByRole("button", { name: "Submit scoped access approval" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Communication Center" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Operations Queue" })).toBeNull();
@@ -326,11 +330,11 @@ describe("App", () => {
     render(<App initialDashboard={dashboard("Parent")} />);
 
     fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
-    expect(screen.getByRole("tab", { name: "Review" })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Complete" })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Confirm" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Review evidence" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Complete task" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Final approval" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Complete task" }));
     expect(screen.getByText("Payment method")).toBeTruthy();
     expect(screen.getByText("Amount to process")).toBeTruthy();
 
@@ -346,7 +350,7 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Verify identity" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Assign role scope" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Complete task" }));
     expect(screen.getByText("Account action")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Submit scoped access approval" }));
     expect(screen.getByText("Access change ready for checker approval")).toBeTruthy();
@@ -360,7 +364,7 @@ describe("App", () => {
     expect(screen.getByText("Review staff appointment records, role assignment request, approval scope, and maker-checker audit controls.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Verify staff identity" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Open learner context" })).toBeNull();
-    expect(screen.getByText("HR Manager")).toBeTruthy();
+    expect(screen.getAllByText("HR Manager").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Restricted").length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: "Verify staff identity" }));
@@ -391,7 +395,7 @@ describe("App", () => {
     expect(screen.getByText("Confirm the admin has explicit permission to export sensitive audit events.")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Prepare audit export" }));
-    expect(screen.getByRole("tab", { name: "Complete" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Complete task" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("Export format")).toBeTruthy();
     expect(screen.getByText("Date range")).toBeTruthy();
 
@@ -408,8 +412,7 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Attach invoice, receipt, and ledger review" })).toBeTruthy();
   });
 
-  test("workflow step, tab, and completion clicks scroll changed panels into view", () => {
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });
+  test("workflow step, tab, and completion clicks update the current task page without page scrolling", () => {
     const scrollIntoView = vi.fn();
     Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
 
@@ -417,21 +420,23 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Prepare audit pack" }));
     fireEvent.click(screen.getByRole("button", { name: "Verify export authority" }));
-    fireEvent.click(screen.getByRole("tab", { name: "Complete" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Complete task" }));
     fireEvent.click(screen.getByRole("button", { name: "Generate signed audit export package" }));
 
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
-    expect(scrollIntoView).toHaveBeenCalledTimes(4);
+    expect(screen.getByText("Export package ready for compliance approval")).toBeTruthy();
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
-  test("dashboard actions scroll the task workflow into view", () => {
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });
+
+  test("dashboard actions open a task page without autoscrolling the dashboard", () => {
     const scrollIntoView = vi.fn();
     Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
 
     render(<App initialDashboard={dashboard("Parent")} />);
 
     fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    expect(screen.getByRole("heading", { name: "Fee Statement" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back to dashboard" })).toBeTruthy();
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   test("parent teacher messages support chat and media uploads", () => {
@@ -529,15 +534,16 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Publish revision material" })).toBeTruthy();
   });
 
-  test("autoscrolled task sections receive a visible highlight", () => {
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => { callback(0); return 0; });
-    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: vi.fn() });
+  test("changed task sections receive a visible highlight without autoscrolling", () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
     const { container } = render(<App initialDashboard={dashboard("Parent")} />);
 
     fireEvent.click(screen.getByRole("button", { name: "View fee statement" }));
     fireEvent.click(screen.getByRole("button", { name: "Review balance movement" }));
 
     expect(container.querySelector(".task-section.scroll-highlight")).toBeTruthy();
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
   test("role navigation uses clear school portal nomenclature instead of generic labels", () => {
     const { rerender } = render(<App initialDashboard={dashboard("Super Admin")} />);
@@ -616,5 +622,35 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Publish resource to library" }));
     expect(screen.getByText("Resource uploaded to the learning library with access controls applied")).toBeTruthy();
+  });
+  test("action buttons open focused task pages instead of keeping the dashboard clutter visible", () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
+
+    render(<App initialDashboard={dashboard("Teacher")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Upload assignment" }));
+
+    expect(screen.getByRole("heading", { name: "Assignment Upload Center" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back to dashboard" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Take daily register" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Communication Center" })).toBeNull();
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to dashboard" }));
+    expect(screen.getAllByRole("button", { name: "Upload assignment" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Teacher Workspace" })).toBeTruthy();
+  });
+
+  test("table row workflows open as task pages without the selected-step side panel", () => {
+    render(<App initialDashboard={dashboard("Super Admin")} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Staff Role Assignments" }));
+
+    expect(screen.getByRole("heading", { name: "Staff Role Assignments" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back to dashboard" })).toBeTruthy();
+    expect(screen.queryByText("Selected step")).toBeNull();
+    expect(screen.getByText("Active task")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Communication Center" })).toBeNull();
   });
 });
